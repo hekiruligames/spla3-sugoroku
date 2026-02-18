@@ -201,7 +201,7 @@ const SPECIAL_WEAPONS = [
 ];
 
 const state = {
-  position: 1,
+  position: 0,
   displayMode: "auto",
   followCurrent: true,
   squidColor: "#22d3ee",
@@ -334,8 +334,8 @@ function buildCells() {
   const pickSubUnique = createUniquePicker(SUB_WEAPONS);
   const pickSpecialUnique = createUniquePicker(SPECIAL_WEAPONS);
 
-  for (let i = 1; i <= GOAL; i += 1) {
-    if (i === 1) {
+  for (let i = 0; i <= GOAL; i += 1) {
+    if (i === 0) {
       cells[i] = { index: i, kind: "start", weapon: "Start" };
       continue;
     }
@@ -360,8 +360,8 @@ function buildCells() {
 
 function buildSerpentineOrder(total, cols) {
   const order = [];
-  const rows = Math.ceil(total / cols);
-  let n = 1;
+  const rows = Math.ceil((total + 1) / cols);
+  let n = 0;
 
   for (let r = 0; r < rows; r += 1) {
     const row = [];
@@ -598,14 +598,14 @@ manualStepInput.addEventListener("keydown", (e) => {
 });
 
 resetBtn.addEventListener("click", () => {
-  state.position = 1;
+  state.position = 0;
   diceResult.textContent = "出目: -";
   renderBoard({ smoothFollow: false });
 });
 
 regenBtn.addEventListener("click", () => {
   buildCells();
-  state.position = 1;
+  state.position = 0;
   diceResult.textContent = "出目: -";
   renderBoard({ smoothFollow: false });
 });

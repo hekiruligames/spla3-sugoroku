@@ -10,7 +10,7 @@
     <main class="app">
       <header class="app-header panel">
         <h1>Splatoon 3 すごろく</h1>
-        <p>100マス到達でゴール。5の倍数のマスはサブまたはスペシャル。</p>
+        <p>0番スタート、100番到達でゴール。5の倍数のマスはサブまたはスペシャル。</p>
       </header>
 
       <section class="panel controls">
@@ -31,13 +31,17 @@
         </label>
 
         <div class="inline-pairs">
-          <label for="squidColor">イカ色</label>
-          <input id="squidColor" type="color" value="#22d3ee" />
-          <label for="inputMode">進行方式</label>
-          <select id="inputMode">
-            <option value="dice">サイコロ（1〜6）</option>
-            <option value="manual">手動入力（任意の数）</option>
-          </select>
+          <div class="pair-row">
+            <label for="squidColor">イカ色</label>
+            <input id="squidColor" type="color" value="#22d3ee" />
+          </div>
+          <div class="pair-row">
+            <label for="inputMode">進行方式</label>
+            <select id="inputMode">
+              <option value="dice">サイコロ（1〜6）</option>
+              <option value="manual">手動入力（任意の数）</option>
+            </select>
+          </div>
         </div>
 
         <div id="diceBox" class="group">
@@ -60,7 +64,7 @@
       </section>
 
       <section class="panel status">
-        <p>現在位置: <strong id="positionText">1 / 100</strong></p>
+        <p>現在位置: <strong id="positionText">0 / 100</strong></p>
         <p>現在のマス: <span id="cellType">スタート</span></p>
         <p>武器: <span id="weaponText">Start</span></p>
       </section>

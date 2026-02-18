@@ -70,7 +70,12 @@ body {
 
 .inline-pairs {
   display: grid;
-  grid-template-columns: auto 56px auto minmax(180px, 1fr);
+  gap: 8px;
+}
+
+.pair-row {
+  display: grid;
+  grid-template-columns: auto minmax(180px, 1fr);
   gap: 8px;
   align-items: center;
 }
@@ -294,6 +299,10 @@ button.primary {
   }
 
   .inline-pairs {
+    grid-template-columns: 1fr;
+  }
+
+  .pair-row {
     grid-template-columns: 1fr;
   }
 
