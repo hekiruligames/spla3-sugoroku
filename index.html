@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Splatoon 3 すごろく</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="app-header panel">
+        <h1>Splatoon 3 すごろく</h1>
+        <p>100マス到達でゴール。5の倍数のマスはサブまたはスペシャル。</p>
+      </header>
+
+      <section class="panel controls">
+        <div class="compact-grid">
+          <label for="displayMode">表示モード</label>
+          <select id="displayMode">
+            <option value="auto">自動</option>
+            <option value="5">5列</option>
+            <option value="10">10列</option>
+            <option value="15">15列</option>
+            <option value="20">20列</option>
+          </select>
+        </div>
+
+        <label class="inline-check">
+          <input id="followCurrent" type="checkbox" checked />
+          進行時に現在地へ自動追従
+        </label>
+
+        <div class="inline-pairs">
+          <label for="squidColor">イカ色</label>
+          <input id="squidColor" type="color" value="#22d3ee" />
+          <label for="inputMode">進行方式</label>
+          <select id="inputMode">
+            <option value="dice">サイコロ（1〜6）</option>
+            <option value="manual">手動入力（任意の数）</option>
+          </select>
+        </div>
+
+        <div id="diceBox" class="group">
+          <button id="rollBtn" class="primary">サイコロを振る</button>
+          <p id="diceResult">出目: -</p>
+        </div>
+
+        <div id="manualBox" class="group hidden">
+          <label for="manualStepInput">進む数</label>
+          <div class="manual-row">
+            <input id="manualStepInput" type="number" min="0" value="0" />
+            <button id="manualMoveBtn" class="primary">進む</button>
+          </div>
+        </div>
+
+        <div class="group action-row">
+          <button id="resetBtn">最初から</button>
+          <button id="regenBtn">マスを再生成</button>
+        </div>
+      </section>
+
+      <section class="panel status">
+        <p>現在位置: <strong id="positionText">1 / 100</strong></p>
+        <p>現在のマス: <span id="cellType">スタート</span></p>
+        <p>武器: <span id="weaponText">Start</span></p>
+      </section>
+
+      <section class="panel board-wrap" id="boardWrap">
+        <div class="board-viewport" id="boardViewport">
+          <div id="board" class="board wide responsive" aria-label="すごろくマップ"></div>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
