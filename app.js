@@ -215,6 +215,7 @@ const boardWrap = document.getElementById("boardWrap");
 const boardViewport = document.getElementById("boardViewport");
 const displayModeSelect = document.getElementById("displayMode");
 const followCurrent = document.getElementById("followCurrent");
+const followCurrentNote = document.getElementById("followCurrentNote");
 const squidColorInput = document.getElementById("squidColor");
 const inputMode = document.getElementById("inputMode");
 const diceBox = document.getElementById("diceBox");
@@ -388,7 +389,9 @@ function getDisplayCols() {
     return Number(state.displayMode);
   }
 
-  const width = window.innerWidth;
+  // Auto mode should react to the board area width, not the full window width.
+  const boardWidth = boardWrap?.clientWidth ?? 0;
+  const width = boardWidth > 0 ? boardWidth : window.innerWidth;
   if (width <= 520) {
     return 5;
   }
@@ -407,7 +410,25 @@ function getBoardOrder() {
   return buildSerpentineOrder(GOAL, cols);
 }
 
+function isFollowSuppressedByLayout(cols = getDisplayCols()) {
+  const isWideTwoPane = window.matchMedia("(min-width: 1200px) and (min-aspect-ratio: 4/3)").matches;
+  return isWideTwoPane && cols >= 10;
+}
+
+function updateFollowNote(cols = getDisplayCols()) {
+  if (!followCurrentNote) {
+    return;
+  }
+  followCurrentNote.classList.toggle("hidden", !isFollowSuppressedByLayout(cols));
+}
+
 function scrollToCurrent(smooth) {
+  const cols = getDisplayCols();
+  // In wide two-pane layout, 10/15/20 columns are usually fully visible.
+  if (isFollowSuppressedByLayout(cols)) {
+    return;
+  }
+
   const currentCell = board.querySelector(`[data-index="${state.position}"]`);
   if (!currentCell) {
     return;
@@ -415,9 +436,20 @@ function scrollToCurrent(smooth) {
 
   const wrapRect = boardWrap.getBoundingClientRect();
   const cellRect = currentCell.getBoundingClientRect();
+
+  const topMargin = Math.max(8, cellRect.height * 0.2);
+  if (window.matchMedia("(min-width: 1200px) and (min-aspect-ratio: 4/3)").matches) {
+    const bottomMargin = 8;
+    const sideMargin = 8;
+    const alreadyVisibleY = cellRect.top >= wrapRect.top + topMargin && cellRect.bottom <= wrapRect.bottom - bottomMargin;
+    const alreadyVisibleX = cellRect.left >= wrapRect.left + sideMargin && cellRect.right <= wrapRect.right - sideMargin;
+    if (alreadyVisibleX && alreadyVisibleY) {
+      return;
+    }
+  }
+
   // Keep current cell near the first row.
-  const anchorY = Math.max(8, cellRect.height * 0.2);
-  const targetTop = boardWrap.scrollTop + (cellRect.top - wrapRect.top) - anchorY;
+  const targetTop = boardWrap.scrollTop + (cellRect.top - wrapRect.top) - topMargin;
   const targetLeft = boardWrap.scrollLeft + (cellRect.left - wrapRect.left) - wrapRect.width / 2 + cellRect.width / 2;
 
   boardWrap.scrollTo({
@@ -450,6 +482,8 @@ function applyBoardScale() {
 
 function renderBoard(options = { smoothFollow: false }) {
   const cols = getDisplayCols();
+  updateFollowNote(cols);
+  board.dataset.cols = String(cols);
   const layoutClass = cols === 5 ? "tall" : "wide";
   const fitModeClass = state.displayMode === "auto" ? "responsive" : "fixed";
   board.classList.remove("wide", "tall", "responsive", "fixed");
@@ -529,10 +563,12 @@ async function move(step) {
   const target = Math.min(GOAL, state.position + value);
   state.isAnimating = true;
   setControlsDisabled(true);
+  const isWideTwoPane = window.matchMedia("(min-width: 1200px) and (min-aspect-ratio: 4/3)").matches;
 
   while (state.position < target) {
     state.position += 1;
-    renderBoard({ smoothFollow: true });
+    // Keep classic smooth follow for one-column layout; avoid jitter in two-pane.
+    renderBoard({ smoothFollow: !isWideTwoPane });
     await wait(130);
   }
 

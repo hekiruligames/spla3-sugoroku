@@ -10,7 +10,15 @@
     <main class="app">
       <header class="app-header panel">
         <h1>Splatoon 3 すごろく</h1>
-        <p>0番スタート、100番到達でゴール。5の倍数のマスはサブまたはスペシャル。</p>
+        <details class="header-note">
+          <summary>たしさん（@spl_inkbrush）のアイデアをリスペクトしオマージュしました。</summary>
+          <p>ルール：</p>
+          <ul>
+            <li>キルした数だけマスを進み、止まったマスのブキを使う</li>
+            <li>勝ち試合はキル数そのまま、負け試合はキル数半分（アシスト込み）</li>
+            <li>キル数だけではなくデス数やスペシャル回転数でも良いと思います</li>
+          </ul>
+        </details>
       </header>
 
       <section class="panel controls">
@@ -29,6 +37,9 @@
           <input id="followCurrent" type="checkbox" checked />
           進行時に現在地へ自動追従
         </label>
+        <p id="followCurrentNote" class="follow-note hidden">
+          2カラム表示で10/15/20列のときは、マップ全体表示のため自動追従は行いません。
+        </p>
 
         <div class="inline-pairs">
           <div class="pair-row">
