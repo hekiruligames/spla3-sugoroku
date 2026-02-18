@@ -190,6 +190,13 @@ button.primary {
   max-height: min(72vh, 980px);
 }
 
+.site-footer {
+  font-size: 11px;
+  line-height: 1.4;
+  color: #9ca3af;
+  padding: 2px 4px 0;
+}
+
 .board-viewport {
   width: 100%;
   display: flex;
@@ -370,6 +377,10 @@ button.primary {
   .cell .weapon-label {
     -webkit-line-clamp: 5;
   }
+
+  .site-footer {
+    font-size: 10px;
+  }
 }
 
 @media (min-width: 1200px) and (min-aspect-ratio: 4/3) {
@@ -398,5 +409,10 @@ button.primary {
   .board-wrap {
     grid-area: board;
     max-height: calc(100vh - 32px);
+  }
+
+  .site-footer {
+    grid-column: 2;
+    justify-self: start;
   }
 }
