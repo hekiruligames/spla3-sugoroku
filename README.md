@@ -8,10 +8,9 @@
 - キルした数だけマスを進み、止まったマスのブキを使う
 - 勝ち試合はキル数そのまま、負け試合はキル数半分（アシスト込み）
 
-2024/2/12に配信されたスプラキル数スゴロクをベースしています。
-配信とXはこちら↓
-YouTube→https://www.youtube.com/live/iQNShRBZGcE?si=z6A_NvsOqfzjoYrb
-X→https://x.com/spl_inkbrush/status/1757355680007328246?s=20
+2024/2/12にたしさんが配信したスプラキル数スゴロクをベースしています。
+
+配信とXはこちら[YouTube配信](https://www.youtube.com/live/iQNShRBZGcE?si=z6A_NvsOqfzjoYrb&t=0)／[X投稿](https://x.com/spl_inkbrush/status/1757355680007328246?s=20)
 
 ## 履歴
 
