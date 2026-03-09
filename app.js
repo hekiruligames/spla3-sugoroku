@@ -440,13 +440,24 @@ function scrollToCurrent(smooth) {
 
   const wrapRect = boardWrap.getBoundingClientRect();
   const cellRect = currentCell.getBoundingClientRect();
+  const onePaneTopMargin = 8;
+  const twoPaneTopMargin = Math.max(8, cellRect.height * 0.2);
 
-  const topMargin = Math.max(8, cellRect.height * 0.2);
+  if (!isWideTwoPane) {
+    // One-pane layout: always pin current cell near the first row.
+    const targetTop = boardWrap.scrollTop + (cellRect.top - wrapRect.top) - onePaneTopMargin;
+    boardWrap.scrollTo({
+      top: Math.max(0, targetTop),
+      left: boardWrap.scrollLeft,
+      behavior: smooth ? "smooth" : "auto"
+    });
+    return;
+  }
 
   if (isWideTwoPane) {
     const bottomMargin = 8;
     const sideMargin = 8;
-    const alreadyVisibleY = cellRect.top >= wrapRect.top + topMargin && cellRect.bottom <= wrapRect.bottom - bottomMargin;
+    const alreadyVisibleY = cellRect.top >= wrapRect.top + twoPaneTopMargin && cellRect.bottom <= wrapRect.bottom - bottomMargin;
     const alreadyVisibleX = cellRect.left >= wrapRect.left + sideMargin && cellRect.right <= wrapRect.right - sideMargin;
     if (alreadyVisibleX && alreadyVisibleY) {
       return;
@@ -454,7 +465,7 @@ function scrollToCurrent(smooth) {
   }
 
   // Keep current cell near the first row.
-  const targetTop = boardWrap.scrollTop + (cellRect.top - wrapRect.top) - topMargin;
+  const targetTop = boardWrap.scrollTop + (cellRect.top - wrapRect.top) - twoPaneTopMargin;
   const targetLeft = isWideTwoPane
     ? boardWrap.scrollLeft + (cellRect.left - wrapRect.left) - wrapRect.width / 2 + cellRect.width / 2
     : boardWrap.scrollLeft;
