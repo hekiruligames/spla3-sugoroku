@@ -410,9 +410,12 @@ function getBoardOrder() {
   return buildSerpentineOrder(GOAL, cols);
 }
 
+function isWideTwoPaneLayout() {
+  return window.matchMedia("(min-width: 1200px) and (min-aspect-ratio: 4/3)").matches;
+}
+
 function isFollowSuppressedByLayout(cols = getDisplayCols()) {
-  const isWideTwoPane = window.matchMedia("(min-width: 1200px) and (min-aspect-ratio: 4/3)").matches;
-  return isWideTwoPane && cols >= 10;
+  return isWideTwoPaneLayout() && cols >= 10;
 }
 
 function updateFollowNote(cols = getDisplayCols()) {
@@ -424,6 +427,7 @@ function updateFollowNote(cols = getDisplayCols()) {
 
 function scrollToCurrent(smooth) {
   const cols = getDisplayCols();
+  const isWideTwoPane = isWideTwoPaneLayout();
   // In wide two-pane layout, 10/15/20 columns are usually fully visible.
   if (isFollowSuppressedByLayout(cols)) {
     return;
@@ -436,12 +440,24 @@ function scrollToCurrent(smooth) {
 
   const wrapRect = boardWrap.getBoundingClientRect();
   const cellRect = currentCell.getBoundingClientRect();
+  const onePaneTopMargin = 8;
+  const twoPaneTopMargin = Math.max(8, cellRect.height * 0.2);
 
-  const topMargin = Math.max(8, cellRect.height * 0.2);
-  if (window.matchMedia("(min-width: 1200px) and (min-aspect-ratio: 4/3)").matches) {
+  if (!isWideTwoPane) {
+    // One-pane layout: always pin current cell near the first row.
+    const targetTop = boardWrap.scrollTop + (cellRect.top - wrapRect.top) - onePaneTopMargin;
+    boardWrap.scrollTo({
+      top: Math.max(0, targetTop),
+      left: boardWrap.scrollLeft,
+      behavior: smooth ? "smooth" : "auto"
+    });
+    return;
+  }
+
+  if (isWideTwoPane) {
     const bottomMargin = 8;
     const sideMargin = 8;
-    const alreadyVisibleY = cellRect.top >= wrapRect.top + topMargin && cellRect.bottom <= wrapRect.bottom - bottomMargin;
+    const alreadyVisibleY = cellRect.top >= wrapRect.top + twoPaneTopMargin && cellRect.bottom <= wrapRect.bottom - bottomMargin;
     const alreadyVisibleX = cellRect.left >= wrapRect.left + sideMargin && cellRect.right <= wrapRect.right - sideMargin;
     if (alreadyVisibleX && alreadyVisibleY) {
       return;
@@ -449,8 +465,10 @@ function scrollToCurrent(smooth) {
   }
 
   // Keep current cell near the first row.
-  const targetTop = boardWrap.scrollTop + (cellRect.top - wrapRect.top) - topMargin;
-  const targetLeft = boardWrap.scrollLeft + (cellRect.left - wrapRect.left) - wrapRect.width / 2 + cellRect.width / 2;
+  const targetTop = boardWrap.scrollTop + (cellRect.top - wrapRect.top) - twoPaneTopMargin;
+  const targetLeft = isWideTwoPane
+    ? boardWrap.scrollLeft + (cellRect.left - wrapRect.left) - wrapRect.width / 2 + cellRect.width / 2
+    : boardWrap.scrollLeft;
 
   boardWrap.scrollTo({
     top: Math.max(0, targetTop),
@@ -563,12 +581,14 @@ async function move(step) {
   const target = Math.min(GOAL, state.position + value);
   state.isAnimating = true;
   setControlsDisabled(true);
-  const isWideTwoPane = window.matchMedia("(min-width: 1200px) and (min-aspect-ratio: 4/3)").matches;
+  const isWideTwoPane = isWideTwoPaneLayout();
+  const isCompactViewport = window.matchMedia("(max-width: 900px)").matches;
+  const smoothFollow = !isWideTwoPane && !isCompactViewport;
 
   while (state.position < target) {
     state.position += 1;
-    // Keep classic smooth follow for one-column layout; avoid jitter in two-pane.
-    renderBoard({ smoothFollow: !isWideTwoPane });
+    // Keep smooth follow on larger single-pane layouts, but use instant follow on compact screens.
+    renderBoard({ smoothFollow });
     await wait(130);
   }
 
