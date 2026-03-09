@@ -542,9 +542,13 @@ function renderBoard(options = { smoothFollow: false }) {
   applyBoardScale();
 
   if (state.followCurrent) {
-    window.requestAnimationFrame(() => {
-      scrollToCurrent(options.smoothFollow);
-    });
+    if (options.smoothFollow) {
+      window.requestAnimationFrame(() => {
+        scrollToCurrent(true);
+      });
+    } else {
+      scrollToCurrent(false);
+    }
   }
 }
 

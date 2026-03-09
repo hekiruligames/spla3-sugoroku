@@ -188,6 +188,7 @@ button.primary {
 .board-wrap {
   overflow: auto;
   max-height: min(72vh, 980px);
+  overflow-anchor: none;
 }
 
 .site-footer {
