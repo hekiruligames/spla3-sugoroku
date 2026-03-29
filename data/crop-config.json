@@ -1,0 +1,42 @@
+{
+  "version": 2,
+  "baseline": {
+    "category": "shooter",
+    "categoryOrder": 1
+  },
+  "imageSize": {
+    "width": 1920,
+    "height": 1080
+  },
+  "regions": {
+    "weapon": {
+      "x": 192,
+      "y": 264,
+      "width": 408,
+      "height": 408
+    },
+    "sub": {
+      "x": 696,
+      "y": 498,
+      "width": 162,
+      "height": 162
+    },
+    "special": {
+      "x": 689,
+      "y": 698,
+      "width": 166,
+      "height": 166
+    },
+    "specialPoints": {
+      "x": 1240,
+      "y": 830,
+      "width": 560,
+      "height": 220
+    }
+  },
+  "notes": [
+    "正本は category-order-ja.json と raw/screenshots です。",
+    "raw/screenshots/_order-hero-octa は生成対象に含めません。",
+    "baseline は shooter カテゴリの1件目です。"
+  ]
+}

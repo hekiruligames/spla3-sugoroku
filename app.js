@@ -1,5 +1,8 @@
 const GOAL = 100;
 const STORAGE_KEY = "splatoon3_sugoroku_prefs";
+const RAW_MANIFEST_PATH = "data/raw-manifest.json";
+const SUB_IMAGE_MAP_PATH = "data/sub-image-map.json";
+const SPECIAL_IMAGE_MAP_PATH = "data/special-image-map.json";
 
 const MAIN_WEAPONS = [
   "ボールドマーカー",
@@ -165,39 +168,42 @@ const MAIN_WEAPONS = [
 ];
 
 const SUB_WEAPONS = [
-  "スプラッシュボム",
-  "キューバンボム",
-  "クイックボム",
-  "ロボットボム",
-  "トーピード",
   "カーリングボム",
+  "ジャンプビーコン",
+  "ポイントセンサー",
+  "トーピード",
   "タンサンボム",
   "ポイズンミスト",
-  "ポイントセンサー",
-  "トラップ",
+  "スプラッシュボム",
+  "キューバンボム",
   "スプリンクラー",
-  "ジャンプビーコン",
-  "ラインマーカー"
+  "スプラッシュシールド",
+  "ロボットボム",
+  "ラインマーカー",
+  "トラップ",
+  "クイックボム"
 ];
 
 const SPECIAL_WEAPONS = [
-  "ウルトラショット",
-  "グレートバリア",
-  "メガホンレーザー5.1ch",
-  "カニタンク",
-  "ショクワンダー",
-  "エナジースタンド",
-  "ホップソナー",
-  "サメライド",
-  "キューインキ",
-  "ジェットパック",
-  "アメフラシ",
-  "トリプルトルネード",
-  "ナイスダマ",
   "ウルトラハンコ",
-  "デコイチラシ",
+  "メガホンレーザー5.1ch",
+  "グレートバリア",
+  "ホップソナー",
+  "カニタンク",
+  "トリプルトルネード",
+  "アメフラシ",
+  "サメライド",
+  "ナイスダマ",
+  "スミナガシート",
+  "ウルトラショット",
   "テイオウイカ",
-  "ウルトラチャクチ"
+  "エナジースタンド",
+  "デコイチラシ",
+  "マルチミサイル",
+  "キューインキ",
+  "ウルトラチャクチ",
+  "ショクワンダー",
+  "ジェットパック"
 ];
 
 const state = {
@@ -229,6 +235,64 @@ const regenBtn = document.getElementById("regenBtn");
 const positionText = document.getElementById("positionText");
 const cellType = document.getElementById("cellType");
 const weaponText = document.getElementById("weaponText");
+
+const imageMaps = {
+  weaponByName: new Map(),
+  subByName: {},
+  specialByName: {}
+};
+
+function toWeaponImagePath(item) {
+  return `assets/weapons/${String(item.globalOrder).padStart(3, "0")}-${item.category}-${String(item.categoryOrder).padStart(2, "0")}.png`;
+}
+
+async function fetchJson(path) {
+  const response = await fetch(path, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`${path}: ${response.status}`);
+  }
+  return response.json();
+}
+
+async function loadImageMaps() {
+  try {
+    const [manifest, subMap, specialMap] = await Promise.all([
+      fetchJson(RAW_MANIFEST_PATH),
+      fetchJson(SUB_IMAGE_MAP_PATH),
+      fetchJson(SPECIAL_IMAGE_MAP_PATH)
+    ]);
+
+    imageMaps.weaponByName = new Map(
+      manifest.items.map((item) => [item.weaponNameJa, toWeaponImagePath(item)])
+    );
+    imageMaps.subByName = subMap;
+    imageMaps.specialByName = specialMap;
+    renderBoard({ smoothFollow: false });
+  } catch (error) {
+    console.warn("画像対応表の読み込みに失敗しました。", error);
+  }
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+function getCellImageSrc(data) {
+  if (data.kind === "main") {
+    return imageMaps.weaponByName.get(data.weapon) ?? "";
+  }
+  if (data.kind === "sub") {
+    return imageMaps.subByName[data.weapon] ?? "";
+  }
+  if (data.kind === "special") {
+    return imageMaps.specialByName[data.weapon] ?? "";
+  }
+  return "";
+}
 
 function loadPrefs() {
   try {
@@ -528,10 +592,20 @@ function renderBoard(options = { smoothFollow: false }) {
 
     const marker = data.kind === "start" ? "START" : data.kind === "goal" ? "GOAL" : "";
     const token = idx === state.position ? `<div class="player-token" aria-hidden="true"></div>` : "";
+    const label = marker || data.weapon;
+    const imageSrc = marker ? "" : getCellImageSrc(data);
+    const bodyClass = marker ? "marker-label" : imageSrc ? "image-label" : "weapon-label";
+    const bodyContent = marker
+      ? escapeHtml(label)
+      : imageSrc
+        ? `<img class="cell-image" src="${escapeHtml(imageSrc)}" alt="${escapeHtml(label)}" loading="lazy" decoding="async" />`
+        : escapeHtml(data.weapon);
 
+    cell.setAttribute("title", label);
+    cell.setAttribute("aria-label", `${idx}: ${label}`);
     cell.innerHTML = `
       <div class="num">${idx}</div>
-      <div class="${marker ? "marker-label" : "weapon-label"}">${marker || data.weapon}</div>
+      <div class="${bodyClass}">${bodyContent}</div>
       ${token}
     `;
 
@@ -692,3 +766,4 @@ applyTheme();
 
 buildCells();
 renderBoard({ smoothFollow: false });
+void loadImageMaps();
