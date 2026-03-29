@@ -30,3 +30,20 @@
 - 本サイトのプログラムコードは、作者が作成した指示・仕様に基づき OpenAI Codex を用いて生成しています。
 - 生成されたコードには誤りや意図しない挙動が含まれる可能性があります。公開・運用に関する責任は作者にあります。
 - 本サイトの利用により生じたいかなる損害についても、作者は責任を負いません。
+
+## raw スクショ整理の最小手順
+- 正本は `category-order-ja.json` と `raw/screenshots` です。
+- コマンドはリポジトリのルートディレクトリで実行します。
+- まず manifest を生成します。
+
+```bash
+python3 scripts/build_raw_manifest.py
+```
+
+- 次に preview crop を生成します。
+
+```bash
+python3 scripts/generate_preview_crops.py --limit 5 --output-dir preview/crops
+```
+
+- 初期 crop 設定は `data/crop-config.json` にあります。

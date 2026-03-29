@@ -1,0 +1,1164 @@
+{
+  "version": 2,
+  "generatedAt": "2026-03-29T14:58:55.998503+00:00",
+  "sourceOfTruth": {
+    "categoryOrderFile": "category-order-ja.json",
+    "screenshotsRoot": "raw/screenshots",
+    "allowedCategories": [
+      "shooter",
+      "roller",
+      "charger",
+      "spinner",
+      "maneuver",
+      "slosher",
+      "shelter",
+      "blaster",
+      "brush",
+      "stringer",
+      "wiper"
+    ],
+    "ignoredScreenshotFolders": [
+      "_order-hero-octa"
+    ]
+  },
+  "baseline": {
+    "category": "shooter",
+    "categoryOrder": 1
+  },
+  "counts": {
+    "shooter": 36,
+    "roller": 13,
+    "charger": 18,
+    "spinner": 14,
+    "maneuver": 15,
+    "slosher": 14,
+    "shelter": 10,
+    "blaster": 16,
+    "brush": 8,
+    "stringer": 8,
+    "wiper": 8
+  },
+  "totalWeapons": 160,
+  "items": [
+    {
+      "globalOrder": 1,
+      "category": "shooter",
+      "categoryOrder": 1,
+      "weaponNameJa": "ボールドマーカー",
+      "isBaseline": true
+    },
+    {
+      "globalOrder": 2,
+      "category": "shooter",
+      "categoryOrder": 2,
+      "weaponNameJa": "ボールドマーカーネオ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 3,
+      "category": "shooter",
+      "categoryOrder": 3,
+      "weaponNameJa": "わかばシューター",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 4,
+      "category": "shooter",
+      "categoryOrder": 4,
+      "weaponNameJa": "もみじシューター",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 5,
+      "category": "shooter",
+      "categoryOrder": 5,
+      "weaponNameJa": "シャープマーカー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 6,
+      "category": "shooter",
+      "categoryOrder": 6,
+      "weaponNameJa": "シャープマーカーネオ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 7,
+      "category": "shooter",
+      "categoryOrder": 7,
+      "weaponNameJa": "シャープマーカーGECK",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 8,
+      "category": "shooter",
+      "categoryOrder": 8,
+      "weaponNameJa": "プロモデラーMG",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 9,
+      "category": "shooter",
+      "categoryOrder": 9,
+      "weaponNameJa": "プロモデラーRG",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 10,
+      "category": "shooter",
+      "categoryOrder": 10,
+      "weaponNameJa": "プロモデラー彩(サイ)",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 11,
+      "category": "shooter",
+      "categoryOrder": 11,
+      "weaponNameJa": "スプラシューター",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 12,
+      "category": "shooter",
+      "categoryOrder": 12,
+      "weaponNameJa": "スプラシューターコラボ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 13,
+      "category": "shooter",
+      "categoryOrder": 13,
+      "weaponNameJa": "スプラシューター煌(コウ)",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 14,
+      "category": "shooter",
+      "categoryOrder": 14,
+      "weaponNameJa": ".52ガロン",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 15,
+      "category": "shooter",
+      "categoryOrder": 15,
+      "weaponNameJa": ".52ガロンデコ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 16,
+      "category": "shooter",
+      "categoryOrder": 16,
+      "weaponNameJa": "N-ZAP85",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 17,
+      "category": "shooter",
+      "categoryOrder": 17,
+      "weaponNameJa": "N-ZAP89",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 18,
+      "category": "shooter",
+      "categoryOrder": 18,
+      "weaponNameJa": "プライムシューター",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 19,
+      "category": "shooter",
+      "categoryOrder": 19,
+      "weaponNameJa": "プライムシューターコラボ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 20,
+      "category": "shooter",
+      "categoryOrder": 20,
+      "weaponNameJa": "プライムシューターFRZN",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 21,
+      "category": "shooter",
+      "categoryOrder": 21,
+      "weaponNameJa": ".96ガロン",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 22,
+      "category": "shooter",
+      "categoryOrder": 22,
+      "weaponNameJa": ".96ガロンデコ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 23,
+      "category": "shooter",
+      "categoryOrder": 23,
+      "weaponNameJa": ".96ガロン爪(ソウ)",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 24,
+      "category": "shooter",
+      "categoryOrder": 24,
+      "weaponNameJa": "ジェットスイーパー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 25,
+      "category": "shooter",
+      "categoryOrder": 25,
+      "weaponNameJa": "ジェットスイーパーカスタム",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 26,
+      "category": "shooter",
+      "categoryOrder": 26,
+      "weaponNameJa": "ジェットスイーパーCOBR",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 27,
+      "category": "shooter",
+      "categoryOrder": 27,
+      "weaponNameJa": "スペースシューター",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 28,
+      "category": "shooter",
+      "categoryOrder": 28,
+      "weaponNameJa": "スペースシューターコラボ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 29,
+      "category": "shooter",
+      "categoryOrder": 29,
+      "weaponNameJa": "L3リールガン",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 30,
+      "category": "shooter",
+      "categoryOrder": 30,
+      "weaponNameJa": "L3リールガンD",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 31,
+      "category": "shooter",
+      "categoryOrder": 31,
+      "weaponNameJa": "L3リールガン箔(ハク)",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 32,
+      "category": "shooter",
+      "categoryOrder": 32,
+      "weaponNameJa": "H3リールガン",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 33,
+      "category": "shooter",
+      "categoryOrder": 33,
+      "weaponNameJa": "H3リールガンD",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 34,
+      "category": "shooter",
+      "categoryOrder": 34,
+      "weaponNameJa": "H3リールガンSNAK",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 35,
+      "category": "shooter",
+      "categoryOrder": 35,
+      "weaponNameJa": "ボトルガイザー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 36,
+      "category": "shooter",
+      "categoryOrder": 36,
+      "weaponNameJa": "ボトルガイザーフォイル",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 37,
+      "category": "roller",
+      "categoryOrder": 1,
+      "weaponNameJa": "カーボンローラー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 38,
+      "category": "roller",
+      "categoryOrder": 2,
+      "weaponNameJa": "カーボンローラーデコ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 39,
+      "category": "roller",
+      "categoryOrder": 3,
+      "weaponNameJa": "カーボンローラーANGL",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 40,
+      "category": "roller",
+      "categoryOrder": 4,
+      "weaponNameJa": "スプラローラー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 41,
+      "category": "roller",
+      "categoryOrder": 5,
+      "weaponNameJa": "スプラローラーコラボ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 42,
+      "category": "roller",
+      "categoryOrder": 6,
+      "weaponNameJa": "ダイナモローラー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 43,
+      "category": "roller",
+      "categoryOrder": 7,
+      "weaponNameJa": "ダイナモローラーテスラ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 44,
+      "category": "roller",
+      "categoryOrder": 8,
+      "weaponNameJa": "ダイナモローラー冥(メイ)",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 45,
+      "category": "roller",
+      "categoryOrder": 9,
+      "weaponNameJa": "ヴァリアブルローラー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 46,
+      "category": "roller",
+      "categoryOrder": 10,
+      "weaponNameJa": "ヴァリアブルローラーフォイル",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 47,
+      "category": "roller",
+      "categoryOrder": 11,
+      "weaponNameJa": "ワイドローラー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 48,
+      "category": "roller",
+      "categoryOrder": 12,
+      "weaponNameJa": "ワイドローラーコラボ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 49,
+      "category": "roller",
+      "categoryOrder": 13,
+      "weaponNameJa": "ワイドローラー惑(ワク)",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 50,
+      "category": "charger",
+      "categoryOrder": 1,
+      "weaponNameJa": "スクイックリンα",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 51,
+      "category": "charger",
+      "categoryOrder": 2,
+      "weaponNameJa": "スクイックリンβ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 52,
+      "category": "charger",
+      "categoryOrder": 3,
+      "weaponNameJa": "スプラチャージャー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 53,
+      "category": "charger",
+      "categoryOrder": 4,
+      "weaponNameJa": "スプラチャージャーコラボ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 54,
+      "category": "charger",
+      "categoryOrder": 5,
+      "weaponNameJa": "スプラチャージャーFRST",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 55,
+      "category": "charger",
+      "categoryOrder": 6,
+      "weaponNameJa": "スプラスコープ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 56,
+      "category": "charger",
+      "categoryOrder": 7,
+      "weaponNameJa": "スプラスコープコラボ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 57,
+      "category": "charger",
+      "categoryOrder": 8,
+      "weaponNameJa": "スプラスコープFRST",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 58,
+      "category": "charger",
+      "categoryOrder": 9,
+      "weaponNameJa": "リッター4K",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 59,
+      "category": "charger",
+      "categoryOrder": 10,
+      "weaponNameJa": "4Kスコープ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 60,
+      "category": "charger",
+      "categoryOrder": 11,
+      "weaponNameJa": "リッター4Kカスタム",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 61,
+      "category": "charger",
+      "categoryOrder": 12,
+      "weaponNameJa": "4Kスコープカスタム",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 62,
+      "category": "charger",
+      "categoryOrder": 13,
+      "weaponNameJa": "14式竹筒銃・甲",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 63,
+      "category": "charger",
+      "categoryOrder": 14,
+      "weaponNameJa": "14式竹筒銃・乙",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 64,
+      "category": "charger",
+      "categoryOrder": 15,
+      "weaponNameJa": "ソイチューバー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 65,
+      "category": "charger",
+      "categoryOrder": 16,
+      "weaponNameJa": "ソイチューバーカスタム",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 66,
+      "category": "charger",
+      "categoryOrder": 17,
+      "weaponNameJa": "R-PEN/5H",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 67,
+      "category": "charger",
+      "categoryOrder": 18,
+      "weaponNameJa": "R-PEN/5B",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 68,
+      "category": "spinner",
+      "categoryOrder": 1,
+      "weaponNameJa": "スプラスピナー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 69,
+      "category": "spinner",
+      "categoryOrder": 2,
+      "weaponNameJa": "スプラスピナーコラボ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 70,
+      "category": "spinner",
+      "categoryOrder": 3,
+      "weaponNameJa": "スプラスピナーPYTN",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 71,
+      "category": "spinner",
+      "categoryOrder": 4,
+      "weaponNameJa": "バレルスピナー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 72,
+      "category": "spinner",
+      "categoryOrder": 5,
+      "weaponNameJa": "バレルスピナーデコ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 73,
+      "category": "spinner",
+      "categoryOrder": 6,
+      "weaponNameJa": "ハイドラント",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 74,
+      "category": "spinner",
+      "categoryOrder": 7,
+      "weaponNameJa": "ハイドラントカスタム",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 75,
+      "category": "spinner",
+      "categoryOrder": 8,
+      "weaponNameJa": "ハイドラント圧(アツ)",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 76,
+      "category": "spinner",
+      "categoryOrder": 9,
+      "weaponNameJa": "クーゲルシュライバー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 77,
+      "category": "spinner",
+      "categoryOrder": 10,
+      "weaponNameJa": "クーゲルシュライバー・ヒュー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 78,
+      "category": "spinner",
+      "categoryOrder": 11,
+      "weaponNameJa": "ノーチラス47",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 79,
+      "category": "spinner",
+      "categoryOrder": 12,
+      "weaponNameJa": "ノーチラス79",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 80,
+      "category": "spinner",
+      "categoryOrder": 13,
+      "weaponNameJa": "イグザミナー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 81,
+      "category": "spinner",
+      "categoryOrder": 14,
+      "weaponNameJa": "イグザミナー・ヒュー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 82,
+      "category": "maneuver",
+      "categoryOrder": 1,
+      "weaponNameJa": "スパッタリー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 83,
+      "category": "maneuver",
+      "categoryOrder": 2,
+      "weaponNameJa": "スパッタリー・ヒュー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 84,
+      "category": "maneuver",
+      "categoryOrder": 3,
+      "weaponNameJa": "スパッタリーOWL",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 85,
+      "category": "maneuver",
+      "categoryOrder": 4,
+      "weaponNameJa": "スプラマニューバー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 86,
+      "category": "maneuver",
+      "categoryOrder": 5,
+      "weaponNameJa": "スプラマニューバーコラボ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 87,
+      "category": "maneuver",
+      "categoryOrder": 6,
+      "weaponNameJa": "スプラマニューバー耀(ヨウ)",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 88,
+      "category": "maneuver",
+      "categoryOrder": 7,
+      "weaponNameJa": "ケルビン525",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 89,
+      "category": "maneuver",
+      "categoryOrder": 8,
+      "weaponNameJa": "ケルビン525デコ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 90,
+      "category": "maneuver",
+      "categoryOrder": 9,
+      "weaponNameJa": "デュアルスイーパー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 91,
+      "category": "maneuver",
+      "categoryOrder": 10,
+      "weaponNameJa": "デュアルスイーパーカスタム",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 92,
+      "category": "maneuver",
+      "categoryOrder": 11,
+      "weaponNameJa": "デュアルスイーパー蹄(テイ)",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 93,
+      "category": "maneuver",
+      "categoryOrder": 12,
+      "weaponNameJa": "クアッドホッパーブラック",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 94,
+      "category": "maneuver",
+      "categoryOrder": 13,
+      "weaponNameJa": "クアッドホッパーホワイト",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 95,
+      "category": "maneuver",
+      "categoryOrder": 14,
+      "weaponNameJa": "ガエンFF",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 96,
+      "category": "maneuver",
+      "categoryOrder": 15,
+      "weaponNameJa": "ガエンFFカスタム",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 97,
+      "category": "slosher",
+      "categoryOrder": 1,
+      "weaponNameJa": "バケットスロッシャー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 98,
+      "category": "slosher",
+      "categoryOrder": 2,
+      "weaponNameJa": "バケットスロッシャーデコ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 99,
+      "category": "slosher",
+      "categoryOrder": 3,
+      "weaponNameJa": "ヒッセン",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 100,
+      "category": "slosher",
+      "categoryOrder": 4,
+      "weaponNameJa": "ヒッセン・ヒュー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 101,
+      "category": "slosher",
+      "categoryOrder": 5,
+      "weaponNameJa": "ヒッセンASH",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 102,
+      "category": "slosher",
+      "categoryOrder": 6,
+      "weaponNameJa": "スクリュースロッシャー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 103,
+      "category": "slosher",
+      "categoryOrder": 7,
+      "weaponNameJa": "スクリュースロッシャーネオ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 104,
+      "category": "slosher",
+      "categoryOrder": 8,
+      "weaponNameJa": "オーバーフロッシャー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 105,
+      "category": "slosher",
+      "categoryOrder": 9,
+      "weaponNameJa": "オーバーフロッシャーデコ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 106,
+      "category": "slosher",
+      "categoryOrder": 10,
+      "weaponNameJa": "エクスプロッシャー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 107,
+      "category": "slosher",
+      "categoryOrder": 11,
+      "weaponNameJa": "エクスプロッシャーカスタム",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 108,
+      "category": "slosher",
+      "categoryOrder": 12,
+      "weaponNameJa": "モップリン",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 109,
+      "category": "slosher",
+      "categoryOrder": 13,
+      "weaponNameJa": "モップリンD",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 110,
+      "category": "slosher",
+      "categoryOrder": 14,
+      "weaponNameJa": "モップリン角(カク)",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 111,
+      "category": "shelter",
+      "categoryOrder": 1,
+      "weaponNameJa": "パラシェルター",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 112,
+      "category": "shelter",
+      "categoryOrder": 2,
+      "weaponNameJa": "パラシェルターソレーラ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 113,
+      "category": "shelter",
+      "categoryOrder": 3,
+      "weaponNameJa": "キャンピングシェルター",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 114,
+      "category": "shelter",
+      "categoryOrder": 4,
+      "weaponNameJa": "キャンピングシェルターソレーラ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 115,
+      "category": "shelter",
+      "categoryOrder": 5,
+      "weaponNameJa": "キャンピングシェルターCREM",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 116,
+      "category": "shelter",
+      "categoryOrder": 6,
+      "weaponNameJa": "スパイガジェット",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 117,
+      "category": "shelter",
+      "categoryOrder": 7,
+      "weaponNameJa": "スパイガジェットソレーラ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 118,
+      "category": "shelter",
+      "categoryOrder": 8,
+      "weaponNameJa": "スパイガジェット繚(リョウ)",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 119,
+      "category": "shelter",
+      "categoryOrder": 9,
+      "weaponNameJa": "24式張替傘・甲",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 120,
+      "category": "shelter",
+      "categoryOrder": 10,
+      "weaponNameJa": "24式張替傘・乙",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 121,
+      "category": "blaster",
+      "categoryOrder": 1,
+      "weaponNameJa": "ノヴァブラスター",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 122,
+      "category": "blaster",
+      "categoryOrder": 2,
+      "weaponNameJa": "ノヴァブラスターネオ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 123,
+      "category": "blaster",
+      "categoryOrder": 3,
+      "weaponNameJa": "ホットブラスター",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 124,
+      "category": "blaster",
+      "categoryOrder": 4,
+      "weaponNameJa": "ホットブラスターカスタム",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 125,
+      "category": "blaster",
+      "categoryOrder": 5,
+      "weaponNameJa": "ホットブラスター艶(エン)",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 126,
+      "category": "blaster",
+      "categoryOrder": 6,
+      "weaponNameJa": "ロングブラスター",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 127,
+      "category": "blaster",
+      "categoryOrder": 7,
+      "weaponNameJa": "ロングブラスターカスタム",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 128,
+      "category": "blaster",
+      "categoryOrder": 8,
+      "weaponNameJa": "クラッシュブラスター",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 129,
+      "category": "blaster",
+      "categoryOrder": 9,
+      "weaponNameJa": "クラッシュブラスターネオ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 130,
+      "category": "blaster",
+      "categoryOrder": 10,
+      "weaponNameJa": "ラピッドブラスター",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 131,
+      "category": "blaster",
+      "categoryOrder": 11,
+      "weaponNameJa": "ラピッドブラスターデコ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 132,
+      "category": "blaster",
+      "categoryOrder": 12,
+      "weaponNameJa": "Rブラスターエリート",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 133,
+      "category": "blaster",
+      "categoryOrder": 13,
+      "weaponNameJa": "Rブラスターエリートデコ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 134,
+      "category": "blaster",
+      "categoryOrder": 14,
+      "weaponNameJa": "RブラスターエリートWNTR",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 135,
+      "category": "blaster",
+      "categoryOrder": 15,
+      "weaponNameJa": "S-BLAST92",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 136,
+      "category": "blaster",
+      "categoryOrder": 16,
+      "weaponNameJa": "S-BLAST91",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 137,
+      "category": "brush",
+      "categoryOrder": 1,
+      "weaponNameJa": "パブロ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 138,
+      "category": "brush",
+      "categoryOrder": 2,
+      "weaponNameJa": "パブロ・ヒュー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 139,
+      "category": "brush",
+      "categoryOrder": 3,
+      "weaponNameJa": "ホクサイ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 140,
+      "category": "brush",
+      "categoryOrder": 4,
+      "weaponNameJa": "ホクサイ・ヒュー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 141,
+      "category": "brush",
+      "categoryOrder": 5,
+      "weaponNameJa": "ホクサイ彗(スイ)",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 142,
+      "category": "brush",
+      "categoryOrder": 6,
+      "weaponNameJa": "フィンセント",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 143,
+      "category": "brush",
+      "categoryOrder": 7,
+      "weaponNameJa": "フィンセント・ヒュー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 144,
+      "category": "brush",
+      "categoryOrder": 8,
+      "weaponNameJa": "フィンセントBRNZ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 145,
+      "category": "stringer",
+      "categoryOrder": 1,
+      "weaponNameJa": "トライストリンガー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 146,
+      "category": "stringer",
+      "categoryOrder": 2,
+      "weaponNameJa": "トライストリンガーコラボ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 147,
+      "category": "stringer",
+      "categoryOrder": 3,
+      "weaponNameJa": "トライストリンガー燈(トウ)",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 148,
+      "category": "stringer",
+      "categoryOrder": 4,
+      "weaponNameJa": "LACT-450",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 149,
+      "category": "stringer",
+      "categoryOrder": 5,
+      "weaponNameJa": "LACT-450デコ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 150,
+      "category": "stringer",
+      "categoryOrder": 6,
+      "weaponNameJa": "LACT-450MILK",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 151,
+      "category": "stringer",
+      "categoryOrder": 7,
+      "weaponNameJa": "フルイドV",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 152,
+      "category": "stringer",
+      "categoryOrder": 8,
+      "weaponNameJa": "フルイドVカスタム",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 153,
+      "category": "wiper",
+      "categoryOrder": 1,
+      "weaponNameJa": "ジムワイパー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 154,
+      "category": "wiper",
+      "categoryOrder": 2,
+      "weaponNameJa": "ジムワイパー・ヒュー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 155,
+      "category": "wiper",
+      "categoryOrder": 3,
+      "weaponNameJa": "ジムワイパー封(フウ)",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 156,
+      "category": "wiper",
+      "categoryOrder": 4,
+      "weaponNameJa": "ドライブワイパー",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 157,
+      "category": "wiper",
+      "categoryOrder": 5,
+      "weaponNameJa": "ドライブワイパーデコ",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 158,
+      "category": "wiper",
+      "categoryOrder": 6,
+      "weaponNameJa": "ドライブワイパーRUST",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 159,
+      "category": "wiper",
+      "categoryOrder": 7,
+      "weaponNameJa": "デンタルワイパーミント",
+      "isBaseline": false
+    },
+    {
+      "globalOrder": 160,
+      "category": "wiper",
+      "categoryOrder": 8,
+      "weaponNameJa": "デンタルワイパースミ",
+      "isBaseline": false
+    }
+  ]
+}
