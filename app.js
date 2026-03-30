@@ -601,10 +601,13 @@ function renderBoard(options = { smoothFollow: false }) {
         ? `<img class="cell-image" src="${escapeHtml(imageSrc)}" alt="${escapeHtml(label)}" loading="lazy" decoding="async" />`
         : escapeHtml(data.weapon);
 
+    if (imageSrc) {
+      cell.classList.add("has-image");
+    }
+
     cell.setAttribute("title", label);
     cell.setAttribute("aria-label", `${idx}: ${label}`);
     cell.innerHTML = `
-      <div class="num">${idx}</div>
       <div class="${bodyClass}">${bodyContent}</div>
       ${token}
     `;
