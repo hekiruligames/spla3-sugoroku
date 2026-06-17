@@ -3,6 +3,8 @@ const STORAGE_KEY = "splatoon3_sugoroku_prefs";
 const RAW_MANIFEST_PATH = "data/raw-manifest.json";
 const SUB_IMAGE_MAP_PATH = "data/sub-image-map.json";
 const SPECIAL_IMAGE_MAP_PATH = "data/special-image-map.json";
+const MOVE_STEP_MS = 160;
+const TOKEN_EDGE_OFFSET = 2;
 
 const MAIN_WEAPONS = [
   "ボールドマーカー",
@@ -209,6 +211,7 @@ const SPECIAL_WEAPONS = [
 const state = {
   position: 0,
   displayMode: "auto",
+  obsMode: new URLSearchParams(window.location.search).get("view") === "obs",
   followCurrent: true,
   squidColor: "#22d3ee",
   isAnimating: false,
@@ -230,11 +233,14 @@ const manualStepInput = document.getElementById("manualStepInput");
 const manualMoveBtn = document.getElementById("manualMoveBtn");
 const rollBtn = document.getElementById("rollBtn");
 const diceResult = document.getElementById("diceResult");
+const obsToggleBtn = document.getElementById("obsToggleBtn");
 const resetBtn = document.getElementById("resetBtn");
 const regenBtn = document.getElementById("regenBtn");
 const positionText = document.getElementById("positionText");
 const cellType = document.getElementById("cellType");
 const weaponText = document.getElementById("weaponText");
+const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+let playerToken = null;
 
 const imageMaps = {
   weaponByName: new Map(),
@@ -324,7 +330,7 @@ function applyPrefs() {
     return;
   }
 
-  if (["auto", "5", "10", "15", "20"].includes(prefs.displayMode)) {
+  if (["auto", "1", "5", "10", "15", "20"].includes(prefs.displayMode)) {
     state.displayMode = prefs.displayMode;
   }
 
@@ -337,6 +343,12 @@ function applyTheme() {
   document.documentElement.style.setProperty("--squid-color", state.squidColor);
 }
 
+function applyObsMode() {
+  document.body.classList.toggle("obs-mode", state.obsMode);
+  obsToggleBtn.textContent = state.obsMode ? "通常表示に戻る" : "OBS表示";
+  obsToggleBtn.setAttribute("aria-pressed", String(state.obsMode));
+}
+
 function setControlsDisabled(disabled) {
   const controls = [
     displayModeSelect,
@@ -346,6 +358,7 @@ function setControlsDisabled(disabled) {
     manualStepInput,
     rollBtn,
     manualMoveBtn,
+    obsToggleBtn,
     resetBtn,
     regenBtn
   ];
@@ -448,9 +461,18 @@ function buildSerpentineOrder(total, cols) {
   return order;
 }
 
+function getEffectiveDisplayMode() {
+  return state.obsMode ? "1" : state.displayMode;
+}
+
+function shouldFollowCurrent() {
+  return state.obsMode || state.followCurrent;
+}
+
 function getDisplayCols() {
-  if (state.displayMode !== "auto") {
-    return Number(state.displayMode);
+  const mode = getEffectiveDisplayMode();
+  if (mode !== "auto") {
+    return Number(mode);
   }
 
   // Auto mode should react to the board area width, not the full window width.
@@ -471,6 +493,9 @@ function getDisplayCols() {
 function getBoardOrder() {
   const cols = getDisplayCols();
   state.wideCols = cols;
+  if (cols === 1) {
+    return Array.from({ length: GOAL + 1 }, (_, idx) => GOAL - idx);
+  }
   return buildSerpentineOrder(GOAL, cols);
 }
 
@@ -506,6 +531,17 @@ function scrollToCurrent(smooth) {
   const cellRect = currentCell.getBoundingClientRect();
   const onePaneTopMargin = 8;
   const twoPaneTopMargin = Math.max(8, cellRect.height * 0.2);
+
+  if (cols === 1) {
+    const targetTop = boardWrap.scrollTop + (cellRect.top - wrapRect.top) - wrapRect.height / 2 + cellRect.height / 2;
+    const targetLeft = boardWrap.scrollLeft + (cellRect.left - wrapRect.left) - wrapRect.width / 2 + cellRect.width / 2;
+    boardWrap.scrollTo({
+      top: Math.max(0, targetTop),
+      left: Math.max(0, targetLeft),
+      behavior: smooth ? "smooth" : "auto"
+    });
+    return;
+  }
 
   if (!isWideTwoPane) {
     // One-pane layout: always pin current cell near the first row.
@@ -547,7 +583,7 @@ function applyBoardScale() {
   const tailSpace = Math.max(120, Math.floor(boardWrap.clientHeight * 0.9));
   boardViewport.style.paddingBottom = `${tailSpace}px`;
 
-  if (state.displayMode === "auto") {
+  if (getEffectiveDisplayMode() === "auto") {
     return;
   }
 
@@ -562,21 +598,88 @@ function applyBoardScale() {
   boardViewport.style.minHeight = `${board.offsetHeight * scale + 8}px`;
 }
 
+function getFixedCellSize(cols) {
+  if (cols === 1) {
+    return state.obsMode ? 92 : 96;
+  }
+  if (cols === 5) {
+    return 72;
+  }
+  return 58;
+}
+
+function getCurrentCellElement(position = state.position) {
+  return board.querySelector(`[data-index="${position}"]`);
+}
+
+function ensurePlayerToken() {
+  if (playerToken && playerToken.isConnected) {
+    return playerToken;
+  }
+
+  playerToken = document.createElement("div");
+  playerToken.className = "player-token is-instant";
+  playerToken.setAttribute("aria-hidden", "true");
+  board.appendChild(playerToken);
+  return playerToken;
+}
+
+function positionPlayerToken(animate = false) {
+  const token = ensurePlayerToken();
+  const currentCell = getCurrentCellElement();
+  if (!currentCell) {
+    return;
+  }
+
+  const shouldAnimate = animate && !reducedMotionQuery.matches;
+  token.classList.toggle("is-instant", !shouldAnimate);
+
+  const tokenWidth = token.offsetWidth || 22;
+  const x = currentCell.offsetLeft + currentCell.offsetWidth - tokenWidth - TOKEN_EDGE_OFFSET;
+  const y = currentCell.offsetTop + TOKEN_EDGE_OFFSET;
+  token.style.setProperty("--token-x", `${Math.max(0, x)}px`);
+  token.style.setProperty("--token-y", `${Math.max(0, y)}px`);
+
+  if (!shouldAnimate) {
+    token.getBoundingClientRect();
+    window.requestAnimationFrame(() => {
+      token.classList.remove("is-instant");
+    });
+  }
+}
+
+function updateCurrentCell(prevPosition, nextPosition) {
+  getCurrentCellElement(prevPosition)?.classList.remove("current");
+  getCurrentCellElement(nextPosition)?.classList.add("current");
+}
+
+function updatePositionView(prevPosition, options = { animateToken: false, smoothFollow: false }) {
+  updateCurrentCell(prevPosition, state.position);
+  updateStatus();
+  positionPlayerToken(options.animateToken);
+
+  if (shouldFollowCurrent()) {
+    scrollToCurrent(options.smoothFollow);
+  }
+}
+
 function renderBoard(options = { smoothFollow: false }) {
   const cols = getDisplayCols();
+  const effectiveMode = getEffectiveDisplayMode();
   updateFollowNote(cols);
   board.dataset.cols = String(cols);
-  const layoutClass = cols === 5 ? "tall" : "wide";
-  const fitModeClass = state.displayMode === "auto" ? "responsive" : "fixed";
-  board.classList.remove("wide", "tall", "responsive", "fixed");
+  const layoutClass = cols === 1 ? "single" : cols === 5 ? "tall" : "wide";
+  const fitModeClass = effectiveMode === "auto" ? "responsive" : "fixed";
+  board.classList.remove("wide", "tall", "single", "responsive", "fixed");
   board.classList.add(layoutClass, fitModeClass);
-  if (state.displayMode !== "auto") {
-    const colSize = cols === 5 ? 72 : 58;
+  if (effectiveMode !== "auto") {
+    const colSize = getFixedCellSize(cols);
     board.style.gridTemplateColumns = `repeat(${cols}, ${colSize}px)`;
   } else {
     board.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
   }
   board.innerHTML = "";
+  playerToken = null;
 
   const order = getBoardOrder();
 
@@ -591,7 +694,6 @@ function renderBoard(options = { smoothFollow: false }) {
     }
 
     const marker = data.kind === "start" ? "START" : data.kind === "goal" ? "GOAL" : "";
-    const token = idx === state.position ? `<div class="player-token" aria-hidden="true"></div>` : "";
     const label = marker || data.weapon;
     const imageSrc = marker ? "" : getCellImageSrc(data);
     const bodyClass = marker ? "marker-label" : imageSrc ? "image-label" : "weapon-label";
@@ -609,7 +711,6 @@ function renderBoard(options = { smoothFollow: false }) {
     cell.setAttribute("aria-label", `${idx}: ${label}`);
     cell.innerHTML = `
       <div class="${bodyClass}">${bodyContent}</div>
-      ${token}
     `;
 
     board.appendChild(cell);
@@ -617,8 +718,9 @@ function renderBoard(options = { smoothFollow: false }) {
 
   updateStatus();
   applyBoardScale();
+  positionPlayerToken(false);
 
-  if (state.followCurrent) {
+  if (shouldFollowCurrent()) {
     window.requestAnimationFrame(() => {
       scrollToCurrent(options.smoothFollow);
     });
@@ -656,17 +758,23 @@ async function move(step) {
   }
 
   const target = Math.min(GOAL, state.position + value);
+  if (target === state.position) {
+    return;
+  }
+
   state.isAnimating = true;
   setControlsDisabled(true);
   const isWideTwoPane = isWideTwoPaneLayout();
   const isCompactViewport = window.matchMedia("(max-width: 900px)").matches;
-  const smoothFollow = !isWideTwoPane && !isCompactViewport;
+  const cols = getDisplayCols();
+  const smoothFollow = cols === 1 || (!isWideTwoPane && !isCompactViewport);
+  const stepDelay = reducedMotionQuery.matches ? 60 : MOVE_STEP_MS;
 
   while (state.position < target) {
+    const prevPosition = state.position;
     state.position += 1;
-    // Keep smooth follow on larger single-pane layouts, but use instant follow on compact screens.
-    renderBoard({ smoothFollow });
-    await wait(130);
+    updatePositionView(prevPosition, { animateToken: true, smoothFollow });
+    await wait(stepDelay);
   }
 
   state.isAnimating = false;
@@ -697,7 +805,7 @@ displayModeSelect.addEventListener("change", (e) => {
 
 followCurrent.addEventListener("change", (e) => {
   state.followCurrent = e.target.checked;
-  if (state.followCurrent) {
+  if (shouldFollowCurrent()) {
     scrollToCurrent(false);
   }
 });
@@ -712,6 +820,12 @@ inputMode.addEventListener("change", (e) => {
   const diceMode = e.target.value === "dice";
   diceBox.classList.toggle("hidden", !diceMode);
   manualBox.classList.toggle("hidden", diceMode);
+});
+
+obsToggleBtn.addEventListener("click", () => {
+  state.obsMode = !state.obsMode;
+  applyObsMode();
+  renderBoard({ smoothFollow: false });
 });
 
 rollBtn.addEventListener("click", () => {
@@ -745,7 +859,7 @@ regenBtn.addEventListener("click", () => {
 
 window.addEventListener("resize", () => {
   const nextWideCols = getDisplayCols();
-  const colsChanged = state.displayMode === "auto" && state.wideCols !== nextWideCols;
+  const colsChanged = getEffectiveDisplayMode() === "auto" && state.wideCols !== nextWideCols;
 
   if (colsChanged) {
     renderBoard({ smoothFollow: false });
@@ -753,7 +867,8 @@ window.addEventListener("resize", () => {
   }
 
   applyBoardScale();
-  if (state.followCurrent) {
+  positionPlayerToken(false);
+  if (shouldFollowCurrent()) {
     scrollToCurrent(false);
   }
 });
@@ -762,6 +877,7 @@ applyPrefs();
 displayModeSelect.value = state.displayMode;
 squidColorInput.value = state.squidColor;
 applyTheme();
+applyObsMode();
 
 buildCells();
 renderBoard({ smoothFollow: false });
