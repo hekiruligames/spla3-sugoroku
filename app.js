@@ -3,6 +3,12 @@ const STORAGE_KEY = "splatoon3_sugoroku_prefs";
 const RAW_MANIFEST_PATH = "data/raw-manifest.json";
 const SUB_IMAGE_MAP_PATH = "data/sub-image-map.json";
 const SPECIAL_IMAGE_MAP_PATH = "data/special-image-map.json";
+const MOVE_STEP_MS = 160;
+const TOKEN_EDGE_OFFSET = 2;
+const SINGLE_COL_BASE_SIZE = 96;
+const SINGLE_COL_SCALE_MIN = 1;
+const SINGLE_COL_SCALE_MAX = 3;
+const SINGLE_COL_SCALE_DEFAULT = 1.5;
 
 const MAIN_WEAPONS = [
   "ボールドマーカー",
@@ -209,8 +215,10 @@ const SPECIAL_WEAPONS = [
 const state = {
   position: 0,
   displayMode: "auto",
+  obsMode: new URLSearchParams(window.location.search).get("view") === "obs",
   followCurrent: true,
   squidColor: "#22d3ee",
+  singleColScale: SINGLE_COL_SCALE_DEFAULT,
   isAnimating: false,
   wideCols: 20,
   cells: []
@@ -230,11 +238,21 @@ const manualStepInput = document.getElementById("manualStepInput");
 const manualMoveBtn = document.getElementById("manualMoveBtn");
 const rollBtn = document.getElementById("rollBtn");
 const diceResult = document.getElementById("diceResult");
+const obsToggleBtn = document.getElementById("obsToggleBtn");
+const returnCurrentBtn = document.getElementById("returnCurrentBtn");
 const resetBtn = document.getElementById("resetBtn");
 const regenBtn = document.getElementById("regenBtn");
+const singleColScaleInput = document.getElementById("singleColScale");
+const singleColScaleValue = document.getElementById("singleColScaleValue");
 const positionText = document.getElementById("positionText");
 const cellType = document.getElementById("cellType");
 const weaponText = document.getElementById("weaponText");
+const goalDialog = document.getElementById("goalDialog");
+const goalResetBtn = document.getElementById("goalResetBtn");
+const goalRegenBtn = document.getElementById("goalRegenBtn");
+const goalCloseBtn = document.getElementById("goalCloseBtn");
+const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+let playerToken = null;
 
 const imageMaps = {
   weaponByName: new Map(),
@@ -310,7 +328,8 @@ function savePrefs() {
   try {
     const prefs = {
       displayMode: state.displayMode,
-      squidColor: state.squidColor
+      squidColor: state.squidColor,
+      singleColScale: state.singleColScale
     };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
   } catch {
@@ -324,17 +343,57 @@ function applyPrefs() {
     return;
   }
 
-  if (["auto", "5", "10", "15", "20"].includes(prefs.displayMode)) {
+  if (["auto", "1", "5", "10", "15", "20"].includes(prefs.displayMode)) {
     state.displayMode = prefs.displayMode;
   }
 
   if (typeof prefs.squidColor === "string" && /^#[0-9a-fA-F]{6}$/.test(prefs.squidColor)) {
     state.squidColor = prefs.squidColor;
   }
+
+  const scale = Number(prefs.singleColScale);
+  if (Number.isFinite(scale)) {
+    state.singleColScale = clampSingleColScale(scale);
+  }
 }
 
 function applyTheme() {
   document.documentElement.style.setProperty("--squid-color", state.squidColor);
+}
+
+function clampSingleColScale(value) {
+  return Math.min(SINGLE_COL_SCALE_MAX, Math.max(SINGLE_COL_SCALE_MIN, value));
+}
+
+function formatSingleColScale(value) {
+  return `${value.toFixed(1)}倍`;
+}
+
+function applySingleColScaleControl() {
+  singleColScaleInput.value = String(state.singleColScale);
+  singleColScaleValue.textContent = formatSingleColScale(state.singleColScale);
+}
+
+function applySingleColSize() {
+  if (getDisplayCols() !== 1) {
+    return;
+  }
+
+  const colSize = getFixedCellSize(1);
+  board.style.gridTemplateColumns = `repeat(1, ${colSize}px)`;
+  applyBoardScale();
+  positionPlayerToken(false);
+  updateReturnCurrentButton();
+
+  if (shouldFollowCurrent()) {
+    scrollToCurrent(false);
+  }
+}
+
+function applyObsMode() {
+  document.body.classList.toggle("obs-mode", state.obsMode);
+  obsToggleBtn.textContent = state.obsMode ? "通常表示に戻る" : "OBS表示";
+  obsToggleBtn.setAttribute("aria-pressed", String(state.obsMode));
 }
 
 function setControlsDisabled(disabled) {
@@ -346,6 +405,9 @@ function setControlsDisabled(disabled) {
     manualStepInput,
     rollBtn,
     manualMoveBtn,
+    obsToggleBtn,
+    returnCurrentBtn,
+    singleColScaleInput,
     resetBtn,
     regenBtn
   ];
@@ -448,9 +510,18 @@ function buildSerpentineOrder(total, cols) {
   return order;
 }
 
+function getEffectiveDisplayMode() {
+  return state.displayMode;
+}
+
+function shouldFollowCurrent() {
+  return state.followCurrent;
+}
+
 function getDisplayCols() {
-  if (state.displayMode !== "auto") {
-    return Number(state.displayMode);
+  const mode = getEffectiveDisplayMode();
+  if (mode !== "auto") {
+    return Number(mode);
   }
 
   // Auto mode should react to the board area width, not the full window width.
@@ -471,6 +542,9 @@ function getDisplayCols() {
 function getBoardOrder() {
   const cols = getDisplayCols();
   state.wideCols = cols;
+  if (cols === 1) {
+    return Array.from({ length: GOAL + 1 }, (_, idx) => GOAL - idx);
+  }
   return buildSerpentineOrder(GOAL, cols);
 }
 
@@ -489,11 +563,11 @@ function updateFollowNote(cols = getDisplayCols()) {
   followCurrentNote.classList.toggle("hidden", !isFollowSuppressedByLayout(cols));
 }
 
-function scrollToCurrent(smooth) {
+function scrollToCurrent(smooth, options = {}) {
   const cols = getDisplayCols();
   const isWideTwoPane = isWideTwoPaneLayout();
   // In wide two-pane layout, 10/15/20 columns are usually fully visible.
-  if (isFollowSuppressedByLayout(cols)) {
+  if (!options.force && isFollowSuppressedByLayout(cols)) {
     return;
   }
 
@@ -506,6 +580,17 @@ function scrollToCurrent(smooth) {
   const cellRect = currentCell.getBoundingClientRect();
   const onePaneTopMargin = 8;
   const twoPaneTopMargin = Math.max(8, cellRect.height * 0.2);
+
+  if (cols === 1) {
+    const targetTop = boardWrap.scrollTop + (cellRect.top - wrapRect.top) - wrapRect.height / 2 + cellRect.height / 2;
+    const targetLeft = boardWrap.scrollLeft + (cellRect.left - wrapRect.left) - wrapRect.width / 2 + cellRect.width / 2;
+    boardWrap.scrollTo({
+      top: Math.max(0, targetTop),
+      left: Math.max(0, targetLeft),
+      behavior: smooth ? "smooth" : "auto"
+    });
+    return;
+  }
 
   if (!isWideTwoPane) {
     // One-pane layout: always pin current cell near the first row.
@@ -547,7 +632,7 @@ function applyBoardScale() {
   const tailSpace = Math.max(120, Math.floor(boardWrap.clientHeight * 0.9));
   boardViewport.style.paddingBottom = `${tailSpace}px`;
 
-  if (state.displayMode === "auto") {
+  if (getEffectiveDisplayMode() === "auto") {
     return;
   }
 
@@ -562,21 +647,117 @@ function applyBoardScale() {
   boardViewport.style.minHeight = `${board.offsetHeight * scale + 8}px`;
 }
 
+function getSingleColCellSize() {
+  const scaledSize = Math.round(SINGLE_COL_BASE_SIZE * state.singleColScale);
+  const availableWidth = Math.max(64, boardWrap.clientWidth - 24);
+  return Math.min(scaledSize, availableWidth);
+}
+
+function getFixedCellSize(cols) {
+  if (cols === 1) {
+    return getSingleColCellSize();
+  }
+  if (cols === 5) {
+    return 72;
+  }
+  return 58;
+}
+
+function getCurrentCellElement(position = state.position) {
+  return board.querySelector(`[data-index="${position}"]`);
+}
+
+function updateReturnCurrentButton() {
+  const currentCell = getCurrentCellElement();
+  if (!currentCell) {
+    return;
+  }
+
+  const wrapRect = boardWrap.getBoundingClientRect();
+  const cellRect = currentCell.getBoundingClientRect();
+  const margin = 12;
+  returnCurrentBtn.textContent = cellRect.top >= wrapRect.bottom - margin ? "↓" : "↑";
+  const currentVisible =
+    cellRect.top < wrapRect.bottom - margin &&
+    cellRect.bottom > wrapRect.top + margin &&
+    cellRect.left < wrapRect.right - margin &&
+    cellRect.right > wrapRect.left + margin;
+
+  returnCurrentBtn.classList.toggle("is-visible", !currentVisible);
+}
+
+function ensurePlayerToken() {
+  if (playerToken && playerToken.isConnected) {
+    return playerToken;
+  }
+
+  playerToken = document.createElement("div");
+  playerToken.className = "player-token is-instant";
+  playerToken.setAttribute("aria-hidden", "true");
+  board.appendChild(playerToken);
+  return playerToken;
+}
+
+function positionPlayerToken(animate = false) {
+  const token = ensurePlayerToken();
+  const currentCell = getCurrentCellElement();
+  if (!currentCell) {
+    return;
+  }
+
+  const shouldAnimate = animate && !reducedMotionQuery.matches;
+  token.classList.toggle("is-instant", !shouldAnimate);
+
+  const tokenWidth = token.offsetWidth || 22;
+  const x = currentCell.offsetLeft + currentCell.offsetWidth - tokenWidth - TOKEN_EDGE_OFFSET;
+  const y = currentCell.offsetTop + TOKEN_EDGE_OFFSET;
+  token.style.setProperty("--token-x", `${Math.max(0, x)}px`);
+  token.style.setProperty("--token-y", `${Math.max(0, y)}px`);
+
+  if (!shouldAnimate) {
+    token.getBoundingClientRect();
+    window.requestAnimationFrame(() => {
+      token.classList.remove("is-instant");
+    });
+  }
+}
+
+function updateCurrentCell(prevPosition, nextPosition) {
+  getCurrentCellElement(prevPosition)?.classList.remove("current");
+  getCurrentCellElement(nextPosition)?.classList.add("current");
+}
+
+function updatePositionView(prevPosition, options = { animateToken: false, smoothFollow: false }) {
+  updateCurrentCell(prevPosition, state.position);
+  updateStatus();
+  positionPlayerToken(options.animateToken);
+  updateReturnCurrentButton();
+
+  if (shouldFollowCurrent()) {
+    scrollToCurrent(options.smoothFollow);
+  }
+}
+
 function renderBoard(options = { smoothFollow: false }) {
   const cols = getDisplayCols();
+  const effectiveMode = getEffectiveDisplayMode();
   updateFollowNote(cols);
   board.dataset.cols = String(cols);
-  const layoutClass = cols === 5 ? "tall" : "wide";
-  const fitModeClass = state.displayMode === "auto" ? "responsive" : "fixed";
-  board.classList.remove("wide", "tall", "responsive", "fixed");
+  const layoutClass = cols === 1 ? "single" : cols === 5 ? "tall" : "wide";
+  const fitModeClass = effectiveMode === "auto" ? "responsive" : "fixed";
+  board.classList.remove("wide", "tall", "single", "responsive", "fixed");
   board.classList.add(layoutClass, fitModeClass);
-  if (state.displayMode !== "auto") {
-    const colSize = cols === 5 ? 72 : 58;
+  if (cols === 1) {
+    const colSize = getFixedCellSize(cols);
+    board.style.gridTemplateColumns = `repeat(${cols}, ${colSize}px)`;
+  } else if (effectiveMode !== "auto") {
+    const colSize = getFixedCellSize(cols);
     board.style.gridTemplateColumns = `repeat(${cols}, ${colSize}px)`;
   } else {
     board.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
   }
   board.innerHTML = "";
+  playerToken = null;
 
   const order = getBoardOrder();
 
@@ -591,7 +772,6 @@ function renderBoard(options = { smoothFollow: false }) {
     }
 
     const marker = data.kind === "start" ? "START" : data.kind === "goal" ? "GOAL" : "";
-    const token = idx === state.position ? `<div class="player-token" aria-hidden="true"></div>` : "";
     const label = marker || data.weapon;
     const imageSrc = marker ? "" : getCellImageSrc(data);
     const bodyClass = marker ? "marker-label" : imageSrc ? "image-label" : "weapon-label";
@@ -609,7 +789,6 @@ function renderBoard(options = { smoothFollow: false }) {
     cell.setAttribute("aria-label", `${idx}: ${label}`);
     cell.innerHTML = `
       <div class="${bodyClass}">${bodyContent}</div>
-      ${token}
     `;
 
     board.appendChild(cell);
@@ -617,15 +796,14 @@ function renderBoard(options = { smoothFollow: false }) {
 
   updateStatus();
   applyBoardScale();
+  positionPlayerToken(false);
+  updateReturnCurrentButton();
 
-  if (state.followCurrent) {
-    if (options.smoothFollow) {
-      window.requestAnimationFrame(() => {
-        scrollToCurrent(true);
-      });
-    } else {
-      scrollToCurrent(false);
-    }
+  if (shouldFollowCurrent()) {
+    window.requestAnimationFrame(() => {
+      scrollToCurrent(options.smoothFollow);
+      window.requestAnimationFrame(updateReturnCurrentButton);
+    });
   }
 }
 
@@ -645,6 +823,36 @@ function updateStatus() {
   weaponText.textContent = current.weapon;
 }
 
+function closeGoalDialog() {
+  if (goalDialog.open) {
+    goalDialog.close();
+  }
+}
+
+function showGoalDialog() {
+  if (typeof goalDialog.showModal === "function") {
+    goalDialog.showModal();
+    return;
+  }
+
+  goalDialog.setAttribute("open", "");
+}
+
+function resetGame() {
+  closeGoalDialog();
+  state.position = 0;
+  diceResult.textContent = "出目: -";
+  renderBoard({ smoothFollow: false });
+}
+
+function regenerateGame() {
+  closeGoalDialog();
+  buildCells();
+  state.position = 0;
+  diceResult.textContent = "出目: -";
+  renderBoard({ smoothFollow: false });
+}
+
 async function move(step) {
   if (state.isAnimating) {
     return;
@@ -660,17 +868,23 @@ async function move(step) {
   }
 
   const target = Math.min(GOAL, state.position + value);
+  if (target === state.position) {
+    return;
+  }
+
   state.isAnimating = true;
   setControlsDisabled(true);
   const isWideTwoPane = isWideTwoPaneLayout();
   const isCompactViewport = window.matchMedia("(max-width: 900px)").matches;
-  const smoothFollow = !isWideTwoPane && !isCompactViewport;
+  const cols = getDisplayCols();
+  const smoothFollow = cols === 1 || (!isWideTwoPane && !isCompactViewport);
+  const stepDelay = reducedMotionQuery.matches ? 60 : MOVE_STEP_MS;
 
   while (state.position < target) {
+    const prevPosition = state.position;
     state.position += 1;
-    // Keep smooth follow on larger single-pane layouts, but use instant follow on compact screens.
-    renderBoard({ smoothFollow });
-    await wait(130);
+    updatePositionView(prevPosition, { animateToken: true, smoothFollow });
+    await wait(stepDelay);
   }
 
   state.isAnimating = false;
@@ -678,7 +892,7 @@ async function move(step) {
 
   if (state.position === GOAL) {
     window.setTimeout(() => {
-      alert("ゴール！おめでとう！");
+      showGoalDialog();
     }, 10);
   }
 }
@@ -701,9 +915,26 @@ displayModeSelect.addEventListener("change", (e) => {
 
 followCurrent.addEventListener("change", (e) => {
   state.followCurrent = e.target.checked;
-  if (state.followCurrent) {
+  if (shouldFollowCurrent()) {
     scrollToCurrent(false);
   }
+});
+
+inputMode.addEventListener("change", (e) => {
+  const diceMode = e.target.value === "dice";
+  diceBox.classList.toggle("hidden", !diceMode);
+  manualBox.classList.toggle("hidden", diceMode);
+});
+
+obsToggleBtn.addEventListener("click", () => {
+  state.obsMode = !state.obsMode;
+  applyObsMode();
+  renderBoard({ smoothFollow: false });
+});
+
+returnCurrentBtn.addEventListener("click", () => {
+  scrollToCurrent(true, { force: true });
+  window.setTimeout(updateReturnCurrentButton, 350);
 });
 
 squidColorInput.addEventListener("input", (e) => {
@@ -712,10 +943,12 @@ squidColorInput.addEventListener("input", (e) => {
   savePrefs();
 });
 
-inputMode.addEventListener("change", (e) => {
-  const diceMode = e.target.value === "dice";
-  diceBox.classList.toggle("hidden", !diceMode);
-  manualBox.classList.toggle("hidden", diceMode);
+singleColScaleInput.addEventListener("input", (e) => {
+  const value = Number(e.target.value);
+  state.singleColScale = clampSingleColScale(Number.isFinite(value) ? value : SINGLE_COL_SCALE_DEFAULT);
+  applySingleColScaleControl();
+  savePrefs();
+  applySingleColSize();
 });
 
 rollBtn.addEventListener("click", () => {
@@ -734,22 +967,19 @@ manualStepInput.addEventListener("keydown", (e) => {
   }
 });
 
-resetBtn.addEventListener("click", () => {
-  state.position = 0;
-  diceResult.textContent = "出目: -";
-  renderBoard({ smoothFollow: false });
-});
+resetBtn.addEventListener("click", resetGame);
 
-regenBtn.addEventListener("click", () => {
-  buildCells();
-  state.position = 0;
-  diceResult.textContent = "出目: -";
-  renderBoard({ smoothFollow: false });
-});
+regenBtn.addEventListener("click", regenerateGame);
+
+goalResetBtn.addEventListener("click", resetGame);
+
+goalRegenBtn.addEventListener("click", regenerateGame);
+
+goalCloseBtn.addEventListener("click", closeGoalDialog);
 
 window.addEventListener("resize", () => {
   const nextWideCols = getDisplayCols();
-  const colsChanged = state.displayMode === "auto" && state.wideCols !== nextWideCols;
+  const colsChanged = getEffectiveDisplayMode() === "auto" && state.wideCols !== nextWideCols;
 
   if (colsChanged) {
     renderBoard({ smoothFollow: false });
@@ -757,15 +987,23 @@ window.addEventListener("resize", () => {
   }
 
   applyBoardScale();
-  if (state.followCurrent) {
+  positionPlayerToken(false);
+  updateReturnCurrentButton();
+  if (shouldFollowCurrent()) {
     scrollToCurrent(false);
   }
+});
+
+boardWrap.addEventListener("scroll", () => {
+  window.requestAnimationFrame(updateReturnCurrentButton);
 });
 
 applyPrefs();
 displayModeSelect.value = state.displayMode;
 squidColorInput.value = state.squidColor;
 applyTheme();
+applySingleColScaleControl();
+applyObsMode();
 
 buildCells();
 renderBoard({ smoothFollow: false });

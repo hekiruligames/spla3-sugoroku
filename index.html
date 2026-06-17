@@ -22,56 +22,74 @@
       </header>
 
       <section class="panel controls">
-        <div class="compact-grid">
-          <label for="displayMode">表示モード</label>
-          <select id="displayMode">
-            <option value="auto">自動</option>
-            <option value="5">5列</option>
-            <option value="10">10列</option>
-            <option value="15">15列</option>
-            <option value="20">20列</option>
-          </select>
-        </div>
-
-        <label class="inline-check">
-          <input id="followCurrent" type="checkbox" checked />
-          進行時に現在地へ自動追従
-        </label>
-        <p id="followCurrentNote" class="follow-note hidden">
-          2カラム表示で10/15/20列のときは、マップ全体表示のため自動追従は行いません。
-        </p>
-
-        <div class="inline-pairs">
-          <div class="pair-row">
-            <label for="squidColor">イカ色</label>
-            <input id="squidColor" type="color" value="#22d3ee" />
+        <div class="play-controls">
+          <div id="diceBox" class="group">
+            <button id="rollBtn" class="primary">サイコロを振る</button>
+            <p id="diceResult">出目: -</p>
           </div>
-          <div class="pair-row">
-            <label for="inputMode">進行方式</label>
-            <select id="inputMode">
-              <option value="dice">サイコロ（1〜6）</option>
-              <option value="manual">手動入力（任意の数）</option>
-            </select>
+
+          <div id="manualBox" class="group hidden">
+            <label for="manualStepInput">進む数</label>
+            <div class="manual-row">
+              <input id="manualStepInput" type="number" min="0" value="0" />
+              <button id="manualMoveBtn" class="primary">進む</button>
+            </div>
           </div>
+
+          <button id="obsToggleBtn" class="view-toggle" type="button">OBS表示</button>
         </div>
 
-        <div id="diceBox" class="group">
-          <button id="rollBtn" class="primary">サイコロを振る</button>
-          <p id="diceResult">出目: -</p>
-        </div>
+        <details class="settings-panel">
+          <summary>設定</summary>
+          <div class="settings-body">
+            <div class="compact-grid">
+              <label for="displayMode">表示モード</label>
+              <select id="displayMode">
+                <option value="auto">自動</option>
+                <option value="1">1列</option>
+                <option value="5">5列</option>
+                <option value="10">10列</option>
+                <option value="15">15列</option>
+                <option value="20">20列</option>
+              </select>
+            </div>
 
-        <div id="manualBox" class="group hidden">
-          <label for="manualStepInput">進む数</label>
-          <div class="manual-row">
-            <input id="manualStepInput" type="number" min="0" value="0" />
-            <button id="manualMoveBtn" class="primary">進む</button>
+            <div class="range-row">
+              <label for="singleColScale">1列サイズ</label>
+              <div class="range-control">
+                <input id="singleColScale" type="range" min="1" max="3" step="0.1" value="1.5" />
+                <output id="singleColScaleValue" for="singleColScale">1.5倍</output>
+              </div>
+            </div>
+
+            <label class="inline-check">
+              <input id="followCurrent" type="checkbox" checked />
+              進行時に現在地へ自動追従
+            </label>
+            <p id="followCurrentNote" class="follow-note hidden">
+              2カラム表示で10/15/20列のときは、マップ全体表示のため自動追従は行いません。
+            </p>
+
+            <div class="inline-pairs">
+              <div class="pair-row">
+                <label for="squidColor">イカ色</label>
+                <input id="squidColor" type="color" value="#22d3ee" />
+              </div>
+              <div class="pair-row">
+                <label for="inputMode">進行方式</label>
+                <select id="inputMode">
+                  <option value="dice">サイコロ（1〜6）</option>
+                  <option value="manual">手動入力（任意の数）</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="group action-row">
+              <button id="resetBtn">最初から</button>
+              <button id="regenBtn">マスを再生成</button>
+            </div>
           </div>
-        </div>
-
-        <div class="group action-row">
-          <button id="resetBtn">最初から</button>
-          <button id="regenBtn">マスを再生成</button>
-        </div>
+        </details>
       </section>
 
       <section class="panel status">
@@ -81,6 +99,7 @@
       </section>
 
       <section class="panel board-wrap" id="boardWrap">
+        <button id="returnCurrentBtn" class="return-current-btn" type="button" aria-label="現在地へ戻る" title="現在地へ戻る">↓</button>
         <div class="board-viewport" id="boardViewport">
           <div id="board" class="board wide responsive" aria-label="すごろくマップ"></div>
         </div>
@@ -90,6 +109,17 @@
         コード生成：OpenAI Codex（作者の指示に基づく） / Code generated with OpenAI Codex under author direction.<br />
         非公式ファンメイド作品 / 『スプラトゥーン3』関連画像の著作権は任天堂株式会社に帰属します。
       </footer>
+
+      <dialog id="goalDialog" class="goal-dialog" aria-labelledby="goalDialogTitle">
+        <div class="goal-dialog-card">
+          <h2 id="goalDialogTitle">ゴール！おめでとう！</h2>
+          <div class="goal-dialog-actions">
+            <button id="goalResetBtn" class="primary" type="button">やりなおす</button>
+            <button id="goalRegenBtn" type="button">マスを再生成</button>
+            <button id="goalCloseBtn" type="button">とじる</button>
+          </div>
+        </div>
+      </dialog>
     </main>
 
     <script src="app.js"></script>
