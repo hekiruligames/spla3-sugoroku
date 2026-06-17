@@ -5,6 +5,10 @@ const SUB_IMAGE_MAP_PATH = "data/sub-image-map.json";
 const SPECIAL_IMAGE_MAP_PATH = "data/special-image-map.json";
 const MOVE_STEP_MS = 160;
 const TOKEN_EDGE_OFFSET = 2;
+const SINGLE_COL_BASE_SIZE = 96;
+const SINGLE_COL_SCALE_MIN = 1;
+const SINGLE_COL_SCALE_MAX = 3;
+const SINGLE_COL_SCALE_DEFAULT = 1.5;
 
 const MAIN_WEAPONS = [
   "ボールドマーカー",
@@ -214,6 +218,7 @@ const state = {
   obsMode: new URLSearchParams(window.location.search).get("view") === "obs",
   followCurrent: true,
   squidColor: "#22d3ee",
+  singleColScale: SINGLE_COL_SCALE_DEFAULT,
   isAnimating: false,
   wideCols: 20,
   cells: []
@@ -234,11 +239,18 @@ const manualMoveBtn = document.getElementById("manualMoveBtn");
 const rollBtn = document.getElementById("rollBtn");
 const diceResult = document.getElementById("diceResult");
 const obsToggleBtn = document.getElementById("obsToggleBtn");
+const returnCurrentBtn = document.getElementById("returnCurrentBtn");
 const resetBtn = document.getElementById("resetBtn");
 const regenBtn = document.getElementById("regenBtn");
+const singleColScaleInput = document.getElementById("singleColScale");
+const singleColScaleValue = document.getElementById("singleColScaleValue");
 const positionText = document.getElementById("positionText");
 const cellType = document.getElementById("cellType");
 const weaponText = document.getElementById("weaponText");
+const goalDialog = document.getElementById("goalDialog");
+const goalResetBtn = document.getElementById("goalResetBtn");
+const goalRegenBtn = document.getElementById("goalRegenBtn");
+const goalCloseBtn = document.getElementById("goalCloseBtn");
 const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 let playerToken = null;
 
@@ -316,7 +328,8 @@ function savePrefs() {
   try {
     const prefs = {
       displayMode: state.displayMode,
-      squidColor: state.squidColor
+      squidColor: state.squidColor,
+      singleColScale: state.singleColScale
     };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
   } catch {
@@ -337,10 +350,44 @@ function applyPrefs() {
   if (typeof prefs.squidColor === "string" && /^#[0-9a-fA-F]{6}$/.test(prefs.squidColor)) {
     state.squidColor = prefs.squidColor;
   }
+
+  const scale = Number(prefs.singleColScale);
+  if (Number.isFinite(scale)) {
+    state.singleColScale = clampSingleColScale(scale);
+  }
 }
 
 function applyTheme() {
   document.documentElement.style.setProperty("--squid-color", state.squidColor);
+}
+
+function clampSingleColScale(value) {
+  return Math.min(SINGLE_COL_SCALE_MAX, Math.max(SINGLE_COL_SCALE_MIN, value));
+}
+
+function formatSingleColScale(value) {
+  return `${value.toFixed(1)}倍`;
+}
+
+function applySingleColScaleControl() {
+  singleColScaleInput.value = String(state.singleColScale);
+  singleColScaleValue.textContent = formatSingleColScale(state.singleColScale);
+}
+
+function applySingleColSize() {
+  if (getDisplayCols() !== 1) {
+    return;
+  }
+
+  const colSize = getFixedCellSize(1);
+  board.style.gridTemplateColumns = `repeat(1, ${colSize}px)`;
+  applyBoardScale();
+  positionPlayerToken(false);
+  updateReturnCurrentButton();
+
+  if (shouldFollowCurrent()) {
+    scrollToCurrent(false);
+  }
 }
 
 function applyObsMode() {
@@ -359,6 +406,8 @@ function setControlsDisabled(disabled) {
     rollBtn,
     manualMoveBtn,
     obsToggleBtn,
+    returnCurrentBtn,
+    singleColScaleInput,
     resetBtn,
     regenBtn
   ];
@@ -462,11 +511,11 @@ function buildSerpentineOrder(total, cols) {
 }
 
 function getEffectiveDisplayMode() {
-  return state.obsMode ? "1" : state.displayMode;
+  return state.displayMode;
 }
 
 function shouldFollowCurrent() {
-  return state.obsMode || state.followCurrent;
+  return state.followCurrent;
 }
 
 function getDisplayCols() {
@@ -514,11 +563,11 @@ function updateFollowNote(cols = getDisplayCols()) {
   followCurrentNote.classList.toggle("hidden", !isFollowSuppressedByLayout(cols));
 }
 
-function scrollToCurrent(smooth) {
+function scrollToCurrent(smooth, options = {}) {
   const cols = getDisplayCols();
   const isWideTwoPane = isWideTwoPaneLayout();
   // In wide two-pane layout, 10/15/20 columns are usually fully visible.
-  if (isFollowSuppressedByLayout(cols)) {
+  if (!options.force && isFollowSuppressedByLayout(cols)) {
     return;
   }
 
@@ -598,9 +647,15 @@ function applyBoardScale() {
   boardViewport.style.minHeight = `${board.offsetHeight * scale + 8}px`;
 }
 
+function getSingleColCellSize() {
+  const scaledSize = Math.round(SINGLE_COL_BASE_SIZE * state.singleColScale);
+  const availableWidth = Math.max(64, boardWrap.clientWidth - 24);
+  return Math.min(scaledSize, availableWidth);
+}
+
 function getFixedCellSize(cols) {
   if (cols === 1) {
-    return state.obsMode ? 92 : 96;
+    return getSingleColCellSize();
   }
   if (cols === 5) {
     return 72;
@@ -610,6 +665,25 @@ function getFixedCellSize(cols) {
 
 function getCurrentCellElement(position = state.position) {
   return board.querySelector(`[data-index="${position}"]`);
+}
+
+function updateReturnCurrentButton() {
+  const currentCell = getCurrentCellElement();
+  if (!currentCell) {
+    return;
+  }
+
+  const wrapRect = boardWrap.getBoundingClientRect();
+  const cellRect = currentCell.getBoundingClientRect();
+  const margin = 12;
+  returnCurrentBtn.textContent = cellRect.top >= wrapRect.bottom - margin ? "↓" : "↑";
+  const currentVisible =
+    cellRect.top < wrapRect.bottom - margin &&
+    cellRect.bottom > wrapRect.top + margin &&
+    cellRect.left < wrapRect.right - margin &&
+    cellRect.right > wrapRect.left + margin;
+
+  returnCurrentBtn.classList.toggle("is-visible", !currentVisible);
 }
 
 function ensurePlayerToken() {
@@ -657,6 +731,7 @@ function updatePositionView(prevPosition, options = { animateToken: false, smoot
   updateCurrentCell(prevPosition, state.position);
   updateStatus();
   positionPlayerToken(options.animateToken);
+  updateReturnCurrentButton();
 
   if (shouldFollowCurrent()) {
     scrollToCurrent(options.smoothFollow);
@@ -672,7 +747,10 @@ function renderBoard(options = { smoothFollow: false }) {
   const fitModeClass = effectiveMode === "auto" ? "responsive" : "fixed";
   board.classList.remove("wide", "tall", "single", "responsive", "fixed");
   board.classList.add(layoutClass, fitModeClass);
-  if (effectiveMode !== "auto") {
+  if (cols === 1) {
+    const colSize = getFixedCellSize(cols);
+    board.style.gridTemplateColumns = `repeat(${cols}, ${colSize}px)`;
+  } else if (effectiveMode !== "auto") {
     const colSize = getFixedCellSize(cols);
     board.style.gridTemplateColumns = `repeat(${cols}, ${colSize}px)`;
   } else {
@@ -719,10 +797,12 @@ function renderBoard(options = { smoothFollow: false }) {
   updateStatus();
   applyBoardScale();
   positionPlayerToken(false);
+  updateReturnCurrentButton();
 
   if (shouldFollowCurrent()) {
     window.requestAnimationFrame(() => {
       scrollToCurrent(options.smoothFollow);
+      window.requestAnimationFrame(updateReturnCurrentButton);
     });
   }
 }
@@ -741,6 +821,36 @@ function updateStatus() {
 
   cellType.textContent = typeLabel[current.kind];
   weaponText.textContent = current.weapon;
+}
+
+function closeGoalDialog() {
+  if (goalDialog.open) {
+    goalDialog.close();
+  }
+}
+
+function showGoalDialog() {
+  if (typeof goalDialog.showModal === "function") {
+    goalDialog.showModal();
+    return;
+  }
+
+  goalDialog.setAttribute("open", "");
+}
+
+function resetGame() {
+  closeGoalDialog();
+  state.position = 0;
+  diceResult.textContent = "出目: -";
+  renderBoard({ smoothFollow: false });
+}
+
+function regenerateGame() {
+  closeGoalDialog();
+  buildCells();
+  state.position = 0;
+  diceResult.textContent = "出目: -";
+  renderBoard({ smoothFollow: false });
 }
 
 async function move(step) {
@@ -782,7 +892,7 @@ async function move(step) {
 
   if (state.position === GOAL) {
     window.setTimeout(() => {
-      alert("ゴール！おめでとう！");
+      showGoalDialog();
     }, 10);
   }
 }
@@ -810,12 +920,6 @@ followCurrent.addEventListener("change", (e) => {
   }
 });
 
-squidColorInput.addEventListener("input", (e) => {
-  state.squidColor = e.target.value;
-  applyTheme();
-  savePrefs();
-});
-
 inputMode.addEventListener("change", (e) => {
   const diceMode = e.target.value === "dice";
   diceBox.classList.toggle("hidden", !diceMode);
@@ -826,6 +930,25 @@ obsToggleBtn.addEventListener("click", () => {
   state.obsMode = !state.obsMode;
   applyObsMode();
   renderBoard({ smoothFollow: false });
+});
+
+returnCurrentBtn.addEventListener("click", () => {
+  scrollToCurrent(true, { force: true });
+  window.setTimeout(updateReturnCurrentButton, 350);
+});
+
+squidColorInput.addEventListener("input", (e) => {
+  state.squidColor = e.target.value;
+  applyTheme();
+  savePrefs();
+});
+
+singleColScaleInput.addEventListener("input", (e) => {
+  const value = Number(e.target.value);
+  state.singleColScale = clampSingleColScale(Number.isFinite(value) ? value : SINGLE_COL_SCALE_DEFAULT);
+  applySingleColScaleControl();
+  savePrefs();
+  applySingleColSize();
 });
 
 rollBtn.addEventListener("click", () => {
@@ -844,18 +967,15 @@ manualStepInput.addEventListener("keydown", (e) => {
   }
 });
 
-resetBtn.addEventListener("click", () => {
-  state.position = 0;
-  diceResult.textContent = "出目: -";
-  renderBoard({ smoothFollow: false });
-});
+resetBtn.addEventListener("click", resetGame);
 
-regenBtn.addEventListener("click", () => {
-  buildCells();
-  state.position = 0;
-  diceResult.textContent = "出目: -";
-  renderBoard({ smoothFollow: false });
-});
+regenBtn.addEventListener("click", regenerateGame);
+
+goalResetBtn.addEventListener("click", resetGame);
+
+goalRegenBtn.addEventListener("click", regenerateGame);
+
+goalCloseBtn.addEventListener("click", closeGoalDialog);
 
 window.addEventListener("resize", () => {
   const nextWideCols = getDisplayCols();
@@ -868,15 +988,21 @@ window.addEventListener("resize", () => {
 
   applyBoardScale();
   positionPlayerToken(false);
+  updateReturnCurrentButton();
   if (shouldFollowCurrent()) {
     scrollToCurrent(false);
   }
+});
+
+boardWrap.addEventListener("scroll", () => {
+  window.requestAnimationFrame(updateReturnCurrentButton);
 });
 
 applyPrefs();
 displayModeSelect.value = state.displayMode;
 squidColorInput.value = state.squidColor;
 applyTheme();
+applySingleColScaleControl();
 applyObsMode();
 
 buildCells();

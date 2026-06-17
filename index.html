@@ -54,6 +54,14 @@
               </select>
             </div>
 
+            <div class="range-row">
+              <label for="singleColScale">1列サイズ</label>
+              <div class="range-control">
+                <input id="singleColScale" type="range" min="1" max="3" step="0.1" value="1.5" />
+                <output id="singleColScaleValue" for="singleColScale">1.5倍</output>
+              </div>
+            </div>
+
             <label class="inline-check">
               <input id="followCurrent" type="checkbox" checked />
               進行時に現在地へ自動追従
@@ -91,6 +99,7 @@
       </section>
 
       <section class="panel board-wrap" id="boardWrap">
+        <button id="returnCurrentBtn" class="return-current-btn" type="button" aria-label="現在地へ戻る" title="現在地へ戻る">↓</button>
         <div class="board-viewport" id="boardViewport">
           <div id="board" class="board wide responsive" aria-label="すごろくマップ"></div>
         </div>
@@ -100,6 +109,17 @@
         コード生成：OpenAI Codex（作者の指示に基づく） / Code generated with OpenAI Codex under author direction.<br />
         非公式ファンメイド作品 / 『スプラトゥーン3』関連画像の著作権は任天堂株式会社に帰属します。
       </footer>
+
+      <dialog id="goalDialog" class="goal-dialog" aria-labelledby="goalDialogTitle">
+        <div class="goal-dialog-card">
+          <h2 id="goalDialogTitle">ゴール！おめでとう！</h2>
+          <div class="goal-dialog-actions">
+            <button id="goalResetBtn" class="primary" type="button">やりなおす</button>
+            <button id="goalRegenBtn" type="button">マスを再生成</button>
+            <button id="goalCloseBtn" type="button">とじる</button>
+          </div>
+        </div>
+      </dialog>
     </main>
 
     <script src="app.js"></script>
