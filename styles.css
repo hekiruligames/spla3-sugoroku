@@ -80,6 +80,24 @@ body {
   gap: 10px;
 }
 
+.utility-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px clamp(18px, 5vw, 34px);
+  flex-wrap: wrap;
+}
+
+.reset-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.utility-actions button {
+  min-height: 40px;
+}
+
 .settings-panel {
   border-top: 1px solid color-mix(in srgb, var(--line) 75%, transparent);
   padding-top: 8px;
@@ -210,7 +228,6 @@ button.primary {
 }
 
 .view-toggle {
-  justify-self: start;
   border-color: #64748b;
   background: #172033;
   color: #e5e7eb;
@@ -226,12 +243,6 @@ button.primary {
 
 .manual-row > * {
   width: 100%;
-}
-
-.action-row {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
 }
 
 .status {
@@ -733,6 +744,6 @@ body.obs-mode .board-viewport {
 }
 
 body.obs-mode .view-toggle {
-  padding: 6px 8px;
+  padding: 8px;
   font-size: 12px;
 }
