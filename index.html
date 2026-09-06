@@ -9,7 +9,7 @@
   <body>
     <main class="app">
       <header class="app-header panel">
-        <h1>Splatoon 3 すごろく</h1>
+        <h1><span class="full-title">Splatoon 3 すごろく</span><span class="row-only">スプラ<br />すごろく</span></h1>
         <details class="header-note">
           <summary>たしさん（@spl_inkbrush）のアイデアをリスペクトしオマージュしました。</summary>
           <p>ルール：</p>
@@ -23,6 +23,10 @@
 
       <section class="panel controls">
         <div class="play-controls">
+          <div class="input-mode-controls" role="group" aria-label="進行方式">
+            <label><input type="radio" name="inputMode" value="dice" checked />サイコロ</label>
+            <label><input type="radio" name="inputMode" value="manual" />手入力</label>
+          </div>
           <div id="diceBox" class="group">
             <button id="rollBtn" class="primary">サイコロを振る</button>
             <p id="diceResult">出目: -</p>
@@ -42,61 +46,76 @@
               <button id="resetBtn" type="button">最初から</button>
               <button id="regenBtn" type="button">再生成</button>
             </div>
+            <button id="rowSettingsBtn" class="row-only" type="button" aria-haspopup="dialog">設定</button>
           </div>
         </div>
 
         <details class="settings-panel">
           <summary>設定</summary>
           <div class="settings-body">
-            <div class="compact-grid">
-              <label for="displayMode">表示モード</label>
-              <select id="displayMode">
-                <option value="auto">自動</option>
-                <option value="1">1列</option>
-                <option value="5">5列</option>
-                <option value="10">10列</option>
-                <option value="15">15列</option>
-                <option value="20">20列</option>
-              </select>
-            </div>
+            <fieldset class="display-settings">
+              <legend>表示モード</legend>
+              <div class="display-options">
+                <label><input type="radio" name="displayMode" value="auto" checked />自動</label>
+                <label><input type="radio" name="displayMode" value="row" />1行</label>
+                <label><input type="radio" name="displayMode" value="1" />1列</label>
+                <label><input type="radio" name="displayMode" value="5" />5列</label>
+                <label><input type="radio" name="displayMode" value="10" />10列</label>
+                <label><input type="radio" name="displayMode" value="15" />15列</label>
+                <label><input type="radio" name="displayMode" value="20" />20列</label>
+              </div>
+            </fieldset>
 
-            <div class="range-row">
-              <label for="singleColScale">1列サイズ</label>
+            <div class="size-settings">
+              <label id="singleColScaleLabel" for="singleColScale">1列サイズ</label>
               <div class="range-control">
                 <input id="singleColScale" type="range" min="1" max="3" step="0.1" value="1.5" />
                 <output id="singleColScaleValue" for="singleColScale">1.5倍</output>
               </div>
+              <p class="setting-hint" id="sizeHint">1行・1列表示で調整できます。</p>
             </div>
 
+            <div class="behavior-settings">
             <label class="inline-check">
               <input id="followCurrent" type="checkbox" checked />
-              進行時に現在地へ自動追従
+              現在地へ自動追従
             </label>
             <p id="followCurrentNote" class="follow-note hidden">
               2カラム表示で10/15/20列のときは、マップ全体表示のため自動追従は行いません。
             </p>
-
-            <div class="inline-pairs">
-              <div class="pair-row">
-                <label for="squidColor">イカ色</label>
-                <input id="squidColor" type="color" value="#22d3ee" />
-              </div>
-              <div class="pair-row">
-                <label for="inputMode">進行方式</label>
-                <select id="inputMode">
-                  <option value="dice">サイコロ（1〜6）</option>
-                  <option value="manual">手動入力（任意の数）</option>
-                </select>
-              </div>
+            <label class="inline-check">
+              <input id="debugInfo" type="checkbox" />
+              開発用情報
+            </label>
+            <p class="setting-hint">現在のマスの種類を表示します。</p>
             </div>
+
+            <fieldset class="color-settings">
+              <legend>イカ色</legend>
+              <div class="color-options">
+                <label style="--swatch: #22d3ee"><input type="radio" name="squidColorPreset" value="#22d3ee" aria-label="水色" checked /><span></span></label>
+                <label style="--swatch: #f97316"><input type="radio" name="squidColorPreset" value="#f97316" aria-label="オレンジ" /><span></span></label>
+                <label style="--swatch: #facc15"><input type="radio" name="squidColorPreset" value="#facc15" aria-label="黄色" /><span></span></label>
+                <label style="--swatch: #4ade80"><input type="radio" name="squidColorPreset" value="#4ade80" aria-label="緑" /><span></span></label>
+                <label style="--swatch: #3b82f6"><input type="radio" name="squidColorPreset" value="#3b82f6" aria-label="青" /><span></span></label>
+                <label style="--swatch: #a78bfa"><input type="radio" name="squidColorPreset" value="#a78bfa" aria-label="紫" /><span></span></label>
+                <label style="--swatch: #f472b6"><input type="radio" name="squidColorPreset" value="#f472b6" aria-label="ピンク" /><span></span></label>
+                <label style="--swatch: #ffffff"><input type="radio" name="squidColorPreset" value="#ffffff" aria-label="白" /><span></span></label>
+              </div>
+              <div class="color-code">
+                <label for="squidColor">カラーコード</label>
+                <input id="squidColor" type="text" value="#22d3ee" maxlength="7" spellcheck="false" autocomplete="off" aria-describedby="colorHint" />
+              </div>
+              <p id="colorHint" class="setting-hint">#と6桁の英数字（0〜9、A〜F）</p>
+            </fieldset>
           </div>
         </details>
       </section>
 
       <section class="panel status">
-        <p>現在位置: <strong id="positionText">0 / 100</strong></p>
-        <p>現在のマス: <span id="cellType">スタート</span></p>
-        <p>武器: <span id="weaponText">Start</span></p>
+        <p class="position-line">マス <strong id="positionText">0 / 100</strong></p>
+        <p id="debugInfoLine" class="hidden">現在のマス: <span id="cellType">スタート</span></p>
+        <p class="weapon-line">武器: <span id="weaponText">Start</span></p>
       </section>
 
       <section class="panel board-wrap" id="boardWrap">
@@ -119,6 +138,13 @@
             <button id="goalRegenBtn" type="button">マスを再生成</button>
             <button id="goalCloseBtn" type="button">とじる</button>
           </div>
+        </div>
+      </dialog>
+
+      <dialog id="settingsDialog" class="settings-dialog" aria-labelledby="settingsDialogTitle">
+        <div class="settings-dialog-heading">
+          <h2 id="settingsDialogTitle">設定</h2>
+          <button id="closeSettingsBtn" type="button">閉じる</button>
         </div>
       </dialog>
     </main>

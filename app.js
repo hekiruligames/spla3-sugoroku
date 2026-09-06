@@ -219,6 +219,9 @@ const state = {
   followCurrent: true,
   squidColor: "#22d3ee",
   singleColScale: SINGLE_COL_SCALE_DEFAULT,
+  singleRowScale: SINGLE_COL_SCALE_DEFAULT,
+  inputMode: "dice",
+  debugInfo: false,
   isAnimating: false,
   wideCols: 20,
   cells: []
@@ -227,11 +230,19 @@ const state = {
 const board = document.getElementById("board");
 const boardWrap = document.getElementById("boardWrap");
 const boardViewport = document.getElementById("boardViewport");
-const displayModeSelect = document.getElementById("displayMode");
+const displayModes = [...document.querySelectorAll('input[name="displayMode"]')];
 const followCurrent = document.getElementById("followCurrent");
 const followCurrentNote = document.getElementById("followCurrentNote");
 const squidColorInput = document.getElementById("squidColor");
-const inputMode = document.getElementById("inputMode");
+const inputModes = [...document.querySelectorAll('input[name="inputMode"]')];
+const colorPresets = [...document.querySelectorAll('input[name="squidColorPreset"]')];
+const debugInfoInput = document.getElementById("debugInfo");
+const debugInfoLine = document.getElementById("debugInfoLine");
+const settingsPanel = document.querySelector(".settings-panel");
+const settingsBody = document.querySelector(".settings-body");
+const settingsDialog = document.getElementById("settingsDialog");
+const rowSettingsBtn = document.getElementById("rowSettingsBtn");
+const closeSettingsBtn = document.getElementById("closeSettingsBtn");
 const diceBox = document.getElementById("diceBox");
 const manualBox = document.getElementById("manualBox");
 const manualStepInput = document.getElementById("manualStepInput");
@@ -244,6 +255,8 @@ const resetBtn = document.getElementById("resetBtn");
 const regenBtn = document.getElementById("regenBtn");
 const singleColScaleInput = document.getElementById("singleColScale");
 const singleColScaleValue = document.getElementById("singleColScaleValue");
+const singleColScaleLabel = document.getElementById("singleColScaleLabel");
+const sizeHint = document.getElementById("sizeHint");
 const positionText = document.getElementById("positionText");
 const cellType = document.getElementById("cellType");
 const weaponText = document.getElementById("weaponText");
@@ -329,7 +342,9 @@ function savePrefs() {
     const prefs = {
       displayMode: state.displayMode,
       squidColor: state.squidColor,
-      singleColScale: state.singleColScale
+      singleColScale: state.singleColScale,
+      singleRowScale: state.singleRowScale,
+      debugInfo: state.debugInfo
     };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
   } catch {
@@ -343,7 +358,7 @@ function applyPrefs() {
     return;
   }
 
-  if (["auto", "1", "5", "10", "15", "20"].includes(prefs.displayMode)) {
+  if (["auto", "row", "1", "5", "10", "15", "20"].includes(prefs.displayMode)) {
     state.displayMode = prefs.displayMode;
   }
 
@@ -355,10 +370,18 @@ function applyPrefs() {
   if (Number.isFinite(scale)) {
     state.singleColScale = clampSingleColScale(scale);
   }
+  const rowScale = Number(prefs.singleRowScale);
+  if (Number.isFinite(rowScale)) {
+    state.singleRowScale = clampSingleColScale(rowScale);
+  }
+  state.debugInfo = prefs.debugInfo === true;
 }
 
 function applyTheme() {
   document.documentElement.style.setProperty("--squid-color", state.squidColor);
+  colorPresets.forEach((radio) => {
+    radio.checked = radio.value.toLowerCase() === state.squidColor.toLowerCase();
+  });
 }
 
 function clampSingleColScale(value) {
@@ -370,17 +393,25 @@ function formatSingleColScale(value) {
 }
 
 function applySingleColScaleControl() {
-  singleColScaleInput.value = String(state.singleColScale);
-  singleColScaleValue.textContent = formatSingleColScale(state.singleColScale);
+  const scale = isRowMode() ? state.singleRowScale : state.singleColScale;
+  singleColScaleInput.value = String(scale);
+  singleColScaleValue.textContent = formatSingleColScale(scale);
+  singleColScaleLabel.textContent = isRowMode() ? "1行サイズ" : "1列サイズ";
+  singleColScaleInput.disabled = state.isAnimating || (!isRowMode() && getDisplayCols() !== 1);
+  sizeHint.textContent = isRowMode()
+    ? "画面の高さを超えない範囲で拡大します。"
+    : "1行・1列表示で調整できます。";
 }
 
 function applySingleColSize() {
-  if (getDisplayCols() !== 1) {
+  if (!isRowMode() && getDisplayCols() !== 1) {
     return;
   }
 
-  const colSize = getFixedCellSize(1);
-  board.style.gridTemplateColumns = `repeat(1, ${colSize}px)`;
+  if (!isRowMode()) {
+    const colSize = getFixedCellSize(1);
+    board.style.gridTemplateColumns = `repeat(1, ${colSize}px)`;
+  }
   applyBoardScale();
   positionPlayerToken(false);
   updateReturnCurrentButton();
@@ -396,12 +427,39 @@ function applyObsMode() {
   obsToggleBtn.setAttribute("aria-pressed", String(state.obsMode));
 }
 
+function isRowMode() {
+  return state.displayMode === "row";
+}
+
+function applyRowMode() {
+  const rowMode = isRowMode();
+  document.body.classList.toggle("row-mode", rowMode);
+  // Reuse the same settings elements and values in both layouts.
+  const destination = rowMode || state.obsMode ? settingsDialog : settingsPanel;
+  if (settingsBody.parentElement !== destination) {
+    if (settingsDialog.open) {
+      settingsDialog.close();
+    }
+    destination.appendChild(settingsBody);
+  }
+}
+
+function applyInputMode(value) {
+  state.inputMode = value;
+  inputModes.forEach((radio) => {
+    radio.checked = radio.value === value;
+  });
+  diceBox.classList.toggle("hidden", value !== "dice");
+  manualBox.classList.toggle("hidden", value !== "manual");
+}
+
 function setControlsDisabled(disabled) {
   const controls = [
-    displayModeSelect,
+    ...displayModes,
     followCurrent,
     squidColorInput,
-    inputMode,
+    ...inputModes,
+    ...colorPresets,
     manualStepInput,
     rollBtn,
     manualMoveBtn,
@@ -414,6 +472,7 @@ function setControlsDisabled(disabled) {
   controls.forEach((el) => {
     el.disabled = disabled;
   });
+  applySingleColScaleControl();
 }
 
 function wait(ms) {
@@ -520,6 +579,9 @@ function shouldFollowCurrent() {
 
 function getDisplayCols() {
   const mode = getEffectiveDisplayMode();
+  if (isRowMode()) {
+    return GOAL + 1;
+  }
   if (mode !== "auto") {
     return Number(mode);
   }
@@ -549,7 +611,7 @@ function getBoardOrder() {
 }
 
 function isWideTwoPaneLayout() {
-  return window.matchMedia("(min-width: 1200px) and (min-aspect-ratio: 4/3)").matches;
+  return !isRowMode() && window.matchMedia("(min-width: 1200px) and (min-aspect-ratio: 4/3)").matches;
 }
 
 function isFollowSuppressedByLayout(cols = getDisplayCols()) {
@@ -564,6 +626,7 @@ function updateFollowNote(cols = getDisplayCols()) {
 }
 
 function scrollToCurrent(smooth, options = {}) {
+  smooth = smooth && !reducedMotionQuery.matches;
   const cols = getDisplayCols();
   const isWideTwoPane = isWideTwoPaneLayout();
   // In wide two-pane layout, 10/15/20 columns are usually fully visible.
@@ -578,6 +641,16 @@ function scrollToCurrent(smooth, options = {}) {
 
   const wrapRect = boardWrap.getBoundingClientRect();
   const cellRect = currentCell.getBoundingClientRect();
+  if (isRowMode()) {
+    const targetLeft = boardWrap.scrollLeft + cellRect.left - wrapRect.left - boardWrap.clientLeft
+      + cellRect.width / 2 - boardWrap.clientWidth / 3;
+    boardWrap.scrollTo({
+      top: 0,
+      left: Math.max(0, targetLeft),
+      behavior: smooth ? "smooth" : "auto"
+    });
+    return;
+  }
   const onePaneTopMargin = 8;
   const twoPaneTopMargin = Math.max(8, cellRect.height * 0.2);
 
@@ -629,6 +702,12 @@ function scrollToCurrent(smooth, options = {}) {
 function applyBoardScale() {
   board.style.transform = "scale(1)";
   boardViewport.style.minHeight = "";
+  if (isRowMode()) {
+    boardViewport.style.paddingBottom = "";
+    const cellSize = Math.max(64, Math.min(SINGLE_COL_BASE_SIZE * state.singleRowScale, boardWrap.clientHeight - 32));
+    board.style.gridTemplateColumns = `repeat(${GOAL + 1}, ${cellSize}px)`;
+    return;
+  }
   const tailSpace = Math.max(120, Math.floor(boardWrap.clientHeight * 0.9));
   boardViewport.style.paddingBottom = `${tailSpace}px`;
 
@@ -676,7 +755,9 @@ function updateReturnCurrentButton() {
   const wrapRect = boardWrap.getBoundingClientRect();
   const cellRect = currentCell.getBoundingClientRect();
   const margin = 12;
-  returnCurrentBtn.textContent = cellRect.top >= wrapRect.bottom - margin ? "↓" : "↑";
+  returnCurrentBtn.textContent = isRowMode()
+    ? (cellRect.left >= wrapRect.right - margin ? "→" : "←")
+    : (cellRect.top >= wrapRect.bottom - margin ? "↓" : "↑");
   const currentVisible =
     cellRect.top < wrapRect.bottom - margin &&
     cellRect.bottom > wrapRect.top + margin &&
@@ -739,13 +820,15 @@ function updatePositionView(prevPosition, options = { animateToken: false, smoot
 }
 
 function renderBoard(options = { smoothFollow: false }) {
+  applyRowMode();
+  applySingleColScaleControl();
   const cols = getDisplayCols();
   const effectiveMode = getEffectiveDisplayMode();
   updateFollowNote(cols);
   board.dataset.cols = String(cols);
-  const layoutClass = cols === 1 ? "single" : cols === 5 ? "tall" : "wide";
+  const layoutClass = isRowMode() ? "horizontal" : cols === 1 ? "single" : cols === 5 ? "tall" : "wide";
   const fitModeClass = effectiveMode === "auto" ? "responsive" : "fixed";
-  board.classList.remove("wide", "tall", "single", "responsive", "fixed");
+  board.classList.remove("wide", "tall", "single", "horizontal", "responsive", "fixed");
   board.classList.add(layoutClass, fitModeClass);
   if (cols === 1) {
     const colSize = getFixedCellSize(cols);
@@ -808,6 +891,7 @@ function renderBoard(options = { smoothFollow: false }) {
 }
 
 function updateStatus() {
+  debugInfoLine.classList.toggle("hidden", !state.debugInfo);
   const current = state.cells[state.position];
   positionText.textContent = `${state.position} / ${GOAL}`;
 
@@ -821,6 +905,8 @@ function updateStatus() {
 
   cellType.textContent = typeLabel[current.kind];
   weaponText.textContent = current.weapon;
+  weaponText.title = current.weapon;
+  cellType.title = typeLabel[current.kind];
 }
 
 function closeGoalDialog() {
@@ -877,7 +963,7 @@ async function move(step) {
   const isWideTwoPane = isWideTwoPaneLayout();
   const isCompactViewport = window.matchMedia("(max-width: 900px)").matches;
   const cols = getDisplayCols();
-  const smoothFollow = cols === 1 || (!isWideTwoPane && !isCompactViewport);
+  const smoothFollow = isRowMode() || cols === 1 || (!isWideTwoPane && !isCompactViewport);
   const stepDelay = reducedMotionQuery.matches ? 60 : MOVE_STEP_MS;
 
   while (state.position < target) {
@@ -907,10 +993,12 @@ function onManualMove() {
   move(v);
 }
 
-displayModeSelect.addEventListener("change", (e) => {
-  state.displayMode = e.target.value;
-  savePrefs();
-  renderBoard({ smoothFollow: false });
+displayModes.forEach((radio) => {
+  radio.addEventListener("change", () => {
+    state.displayMode = radio.value;
+    savePrefs();
+    renderBoard({ smoothFollow: false });
+  });
 });
 
 followCurrent.addEventListener("change", (e) => {
@@ -920,10 +1008,19 @@ followCurrent.addEventListener("change", (e) => {
   }
 });
 
-inputMode.addEventListener("change", (e) => {
-  const diceMode = e.target.value === "dice";
-  diceBox.classList.toggle("hidden", !diceMode);
-  manualBox.classList.toggle("hidden", diceMode);
+inputModes.forEach((radio) => {
+  radio.addEventListener("change", () => applyInputMode(radio.value));
+});
+
+rowSettingsBtn.addEventListener("click", () => settingsDialog.showModal());
+closeSettingsBtn.addEventListener("click", () => settingsDialog.close());
+
+settingsDialog.addEventListener("close", () => {
+  if (!isRowMode() && !state.obsMode) {
+    settingsPanel.querySelector("summary").focus({ preventScroll: true });
+  } else if (!isRowMode()) {
+    obsToggleBtn.focus({ preventScroll: true });
+  }
 });
 
 obsToggleBtn.addEventListener("click", () => {
@@ -937,15 +1034,35 @@ returnCurrentBtn.addEventListener("click", () => {
   window.setTimeout(updateReturnCurrentButton, 350);
 });
 
-squidColorInput.addEventListener("input", (e) => {
-  state.squidColor = e.target.value;
+squidColorInput.addEventListener("input", () => {
+  const valid = /^#[0-9a-fA-F]{6}$/.test(squidColorInput.value);
+  squidColorInput.setAttribute("aria-invalid", String(!valid));
+  if (!valid) return;
+  state.squidColor = squidColorInput.value;
   applyTheme();
+  savePrefs();
+});
+
+colorPresets.forEach((radio) => {
+  radio.addEventListener("change", () => {
+    state.squidColor = radio.value;
+    squidColorInput.value = radio.value;
+    squidColorInput.setAttribute("aria-invalid", "false");
+    applyTheme();
+    savePrefs();
+  });
+});
+
+debugInfoInput.addEventListener("change", () => {
+  state.debugInfo = debugInfoInput.checked;
+  updateStatus();
   savePrefs();
 });
 
 singleColScaleInput.addEventListener("input", (e) => {
   const value = Number(e.target.value);
-  state.singleColScale = clampSingleColScale(Number.isFinite(value) ? value : SINGLE_COL_SCALE_DEFAULT);
+  const key = isRowMode() ? "singleRowScale" : "singleColScale";
+  state[key] = clampSingleColScale(Number.isFinite(value) ? value : SINGLE_COL_SCALE_DEFAULT);
   applySingleColScaleControl();
   savePrefs();
   applySingleColSize();
@@ -977,7 +1094,7 @@ goalRegenBtn.addEventListener("click", regenerateGame);
 
 goalCloseBtn.addEventListener("click", closeGoalDialog);
 
-window.addEventListener("resize", () => {
+function refreshBoardLayout() {
   const nextWideCols = getDisplayCols();
   const colsChanged = getEffectiveDisplayMode() === "auto" && state.wideCols !== nextWideCols;
 
@@ -992,14 +1109,24 @@ window.addEventListener("resize", () => {
   if (shouldFollowCurrent()) {
     scrollToCurrent(false);
   }
+}
+
+window.addEventListener("resize", refreshBoardLayout);
+// Scrollbar and narrow-layout changes also affect the available cell height.
+const boardResizeObserver = new ResizeObserver(() => {
+  if (isRowMode()) {
+    refreshBoardLayout();
+  }
 });
+boardResizeObserver.observe(boardWrap);
 
 boardWrap.addEventListener("scroll", () => {
   window.requestAnimationFrame(updateReturnCurrentButton);
 });
 
 applyPrefs();
-displayModeSelect.value = state.displayMode;
+displayModes.forEach((radio) => { radio.checked = radio.value === state.displayMode; });
+debugInfoInput.checked = state.debugInfo;
 squidColorInput.value = state.squidColor;
 applyTheme();
 applySingleColScaleControl();

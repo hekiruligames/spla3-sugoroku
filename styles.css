@@ -118,6 +118,110 @@ body {
   gap: 10px;
 }
 
+.settings-body fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.settings-body legend,
+.size-settings > label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.display-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.display-options label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+input[type="radio"], input[type="checkbox"] {
+  accent-color: var(--accent-2);
+}
+
+.behavior-settings {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.setting-hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #cbd5e1;
+}
+
+.color-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.color-options label {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  cursor: pointer;
+}
+
+.color-options input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.color-options span {
+  display: block;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--swatch);
+  border: 3px solid var(--panel);
+  pointer-events: none;
+}
+
+.color-options input:checked + span {
+  outline: 2px solid white;
+}
+
+.color-options input:focus-visible + span {
+  outline: 3px dashed var(--accent);
+}
+
+.color-code {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.color-code input {
+  width: 95px;
+  padding: 5px;
+}
+
+.color-code input[aria-invalid="true"] {
+  border-color: #f87171;
+}
+
 .compact-grid {
   display: grid;
   grid-template-columns: auto minmax(180px, 1fr);
@@ -590,6 +694,10 @@ button.primary {
   display: none;
 }
 
+.row-only {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .app {
     padding: 12px;
@@ -746,4 +854,325 @@ body.obs-mode .board-viewport {
 body.obs-mode .view-toggle {
   padding: 8px;
   font-size: 12px;
+}
+
+.settings-dialog {
+  width: min(520px, calc(100vw - 24px));
+  max-height: calc(100dvh - 16px);
+  padding: 0 16px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--ink);
+  overflow: auto;
+}
+
+.settings-dialog::backdrop {
+  background: rgba(7, 11, 20, 0.72);
+}
+
+.settings-dialog-heading {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  margin-bottom: 8px;
+  background: var(--panel);
+}
+
+.settings-dialog-heading h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+body.row-mode .app {
+  width: 100%;
+  max-width: none;
+  height: max(180px, 100dvh);
+  min-height: 180px;
+  padding: 6px;
+  margin: 0;
+  gap: 4px 6px;
+  grid-template-columns: clamp(76px, 8vw, 110px) 230px 180px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: "header controls status board";
+  align-content: stretch;
+  align-items: stretch;
+}
+
+body.row-mode .app-header {
+  display: grid;
+  grid-area: header;
+  place-items: center;
+  padding: 6px;
+}
+
+body.row-mode .app-header h1 {
+  font-size: clamp(15px, 1.5vw, 22px);
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+body.row-mode .row-only {
+  display: block;
+}
+
+body.row-mode .full-title,
+body.row-mode .header-note,
+body.row-mode .site-footer,
+body.row-mode .settings-panel,
+body.row-mode #obsToggleBtn {
+  display: none;
+}
+
+body.row-mode .controls {
+  grid-area: controls;
+  min-width: 0;
+  padding: 6px;
+  gap: 0;
+  align-content: center;
+}
+
+body.row-mode .play-controls {
+  gap: 12px;
+}
+
+.input-mode-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  min-height: 28px;
+  font-size: 16px;
+}
+
+.input-mode-controls label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.input-mode-controls input {
+  margin: 0;
+  accent-color: var(--accent-2);
+}
+
+body.row-mode .group:not(.hidden) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  font-size: 15px;
+}
+
+body.row-mode #diceResult {
+  margin: 0;
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+body.row-mode #manualBox {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+body.row-mode .manual-row {
+  gap: 4px;
+}
+
+body.row-mode .group button,
+body.row-mode .group input {
+  min-width: 0;
+  height: 40px;
+  padding: 3px 5px;
+}
+
+body.row-mode .utility-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+}
+
+body.row-mode .reset-actions {
+  flex-wrap: nowrap;
+  gap: 3px;
+  margin-right: auto;
+}
+
+body.row-mode .utility-actions button {
+  min-height: 36px;
+  padding: 5px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+body.row-mode .status {
+  grid-area: status;
+  position: static;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px;
+  font-size: 16px;
+  line-height: 1.4;
+  z-index: auto;
+}
+
+body.row-mode .status p {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
+}
+
+body.row-mode .status .position-line {
+  font-size: 20px;
+  white-space: nowrap;
+}
+
+body.row-mode #debugInfoLine {
+  font-size: 12px;
+}
+
+body.row-mode .board-wrap {
+  grid-area: board;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  max-height: none;
+  padding: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+}
+
+body.row-mode .board-viewport {
+  width: max-content;
+  min-width: 100%;
+  height: 100%;
+  padding: 12px;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.board.horizontal {
+  width: max-content;
+  flex: none;
+  gap: 8px;
+  transform-origin: top left;
+}
+
+.board.horizontal .cell {
+  min-width: 0;
+  font-size: 13px;
+}
+
+body.row-mode .board.horizontal .cell {
+  transform: none;
+}
+
+.board.horizontal .marker-label {
+  font-size: clamp(14px, 8vh, 26px);
+  white-space: nowrap;
+}
+
+@media (max-width: 799px) {
+  body.row-mode .utility-actions button {
+    padding-inline: 2px;
+    font-size: 10px;
+  }
+
+  body.row-mode .app {
+    height: max(340px, 100dvh);
+    min-height: 340px;
+    grid-template-columns: 76px minmax(0, 1fr);
+    grid-template-rows: 128px 54px minmax(128px, 1fr);
+    grid-template-areas:
+      "header controls"
+      "header status"
+      "board board";
+  }
+
+  body.row-mode .status {
+    padding: 3px 6px;
+    gap: 0;
+    font-size: 12px;
+  }
+
+  body.row-mode .status .position-line {
+    font-size: 14px;
+  }
+
+  body.row-mode .status p {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  body.row-mode .play-controls {
+    gap: 4px;
+  }
+}
+
+body.obs-mode:not(.row-mode) #rowSettingsBtn {
+  display: block;
+}
+
+@media (min-width: 1000px) and (max-height: 400px) {
+  .settings-dialog {
+    width: calc(100vw - 24px);
+    padding: 0 12px 10px;
+  }
+
+  .settings-dialog .settings-body {
+    grid-template-columns: 1.1fr 1fr 1fr 1.1fr;
+    align-items: start;
+    gap: 16px;
+    font-size: 14px;
+  }
+
+  .settings-dialog .settings-dialog-heading {
+    margin-bottom: 0;
+    padding: 4px 0;
+  }
+
+  .settings-dialog .settings-dialog-heading button {
+    padding: 4px 8px;
+  }
+
+  .settings-dialog .display-options label {
+    padding: 4px;
+  }
+
+  .settings-dialog .setting-hint {
+    font-size: 11px;
+  }
+}
+
+@media (max-height: 300px) {
+  .goal-dialog {
+    width: min(620px, calc(100vw - 24px));
+    max-height: calc(100dvh - 16px);
+    overflow: auto;
+  }
+
+  .goal-dialog-card {
+    padding: 12px;
+  }
+
+  .goal-dialog h2 {
+    margin-bottom: 10px;
+    font-size: 22px;
+  }
+
+  .goal-dialog-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
 }
