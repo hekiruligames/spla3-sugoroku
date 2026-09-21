@@ -259,6 +259,7 @@ const positionText = document.getElementById("positionText");
 const cellType = document.getElementById("cellType");
 const weaponText = document.getElementById("weaponText");
 const goalDialog = document.getElementById("goalDialog");
+const goalUndoBtn = document.getElementById("goalUndoBtn");
 const goalResetBtn = document.getElementById("goalResetBtn");
 const goalRegenBtn = document.getElementById("goalRegenBtn");
 const goalCloseBtn = document.getElementById("goalCloseBtn");
@@ -1121,6 +1122,8 @@ undoBtn.addEventListener("click", undoLastMove);
 resetBtn.addEventListener("click", resetGame);
 
 regenBtn.addEventListener("click", confirmRegenerateGame);
+
+goalUndoBtn.addEventListener("click", undoLastMove);
 
 goalResetBtn.addEventListener("click", resetGame);
 
