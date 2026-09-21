@@ -697,24 +697,19 @@ function scrollToCurrent(smooth, options = {}) {
 function applyBoardScale() {
   board.style.transform = "scale(1)";
   boardViewport.style.minHeight = "";
+
   if (isRowMode()) {
     boardViewport.style.paddingBottom = "";
     const cellSize = Math.max(64, Math.min(SINGLE_COL_BASE_SIZE * state.singleRowScale, boardWrap.clientHeight - 32));
     board.style.gridTemplateColumns = `repeat(${GOAL + 1}, ${cellSize}px)`;
     return;
   }
+
   const tailSpace = Math.max(120, Math.floor(boardWrap.clientHeight * 0.9));
   boardViewport.style.paddingBottom = `${tailSpace}px`;
 
-  const contentWidth = board.scrollWidth;
-  const availableWidth = Math.max(0, boardWrap.clientWidth - 12);
-  if (!contentWidth || !availableWidth) {
-    return;
-  }
-
-  const scale = Math.min(1, availableWidth / contentWidth);
-  board.style.transform = `scale(${scale})`;
-  boardViewport.style.minHeight = `${board.offsetHeight * scale + 8}px`;
+  // Multi-column boards fit the available width through responsive grid tracks.
+  // The vertical single-column mode already clamps its cell size to the viewport width.
 }
 
 function getSingleColCellSize() {
@@ -816,15 +811,18 @@ function renderBoard(options = { smoothFollow: false }) {
   updateFollowNote(cols);
   board.dataset.cols = String(cols);
   const layoutClass = isRowMode() ? "horizontal" : cols === 1 ? "single" : cols === 5 ? "tall" : "wide";
-  const fitModeClass = "fixed";
+  const fitModeClass = !isRowMode() && cols > 1 ? "responsive" : "fixed";
   board.classList.remove("wide", "tall", "single", "horizontal", "responsive", "fixed");
   board.classList.add(layoutClass, fitModeClass);
-  if (cols === 1) {
+
+  if (isRowMode()) {
+    board.style.gridTemplateColumns = "";
+  } else if (cols === 1) {
     const colSize = getFixedCellSize(cols);
-    board.style.gridTemplateColumns = `repeat(${cols}, ${colSize}px)`;
+    board.style.gridTemplateColumns = `repeat(1, ${colSize}px)`;
   } else {
-    const colSize = getFixedCellSize(cols);
-    board.style.gridTemplateColumns = `repeat(${cols}, ${colSize}px)`;
+    // 5/10/15/20列は、指定列数を維持したまま盤面幅へ収める。
+    board.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
   }
   board.innerHTML = "";
   playerToken = null;
