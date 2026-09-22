@@ -850,28 +850,34 @@ button.primary {
   accent-color: var(--accent-2);
 }
 
-.move-group:not(.hidden) {
+.move-value-group:not(.hidden) {
   display: flex;
   align-items: center;
-  gap: 6px;
   min-width: 0;
 }
 
-.move-group p {
+.move-value-group p {
   margin: 0;
   white-space: nowrap;
   font-size: 13px;
 }
 
-.manual-row {
-  display: grid;
-  grid-template-columns: minmax(70px, 1fr) auto;
-  gap: 6px;
-  min-width: 150px;
+#manualBox {
+  flex: 1 1 150px;
+  max-width: 340px;
 }
 
-.manual-row input {
-  min-width: 0;
+#manualStepInput {
+  width: 100%;
+  min-width: 100px;
+}
+
+.move-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 6px;
+  flex: 0 0 auto;
 }
 
 .control-primary button,
@@ -1148,14 +1154,14 @@ body.row-mode .input-mode-controls {
   gap: 6px;
 }
 
-body.row-mode .move-group p {
+body.row-mode .move-value-group p {
   font-size: 12px;
 }
 
 body.row-mode .control-primary button,
 body.row-mode .toolbar-actions button,
 body.row-mode .more-actions summary,
-body.row-mode .manual-row input {
+body.row-mode #manualStepInput {
   min-height: 34px;
   padding: 4px 6px;
   font-size: 12px;
@@ -1271,7 +1277,7 @@ body.row-mode .board.horizontal .cell {
     width: 100%;
   }
 
-  .move-group:not(.hidden) {
+  .move-value-group:not(.hidden) {
     flex: 1 1 auto;
   }
 
@@ -1279,7 +1285,7 @@ body.row-mode .board.horizontal .cell {
     gap: 5px 6px;
   }
 
-  #undoBtn {
+  .move-actions {
     margin-left: auto;
   }
 
