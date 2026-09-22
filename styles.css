@@ -1035,10 +1035,13 @@ button.primary {
 @media (min-width: 1200px) and (min-aspect-ratio: 4/3) {
   body:not(.row-mode) .app {
     grid-template-columns: minmax(330px, 430px) minmax(0, 1fr);
+    grid-template-rows: auto auto 1fr;
     grid-template-areas:
       "header board"
-      "controls board";
+      "controls board"
+      ". board";
     align-items: start;
+    align-content: start;
   }
 
   body:not(.row-mode) .app-header {
@@ -1048,21 +1051,48 @@ button.primary {
   body:not(.row-mode) .controls {
     grid-area: controls;
     position: static;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "primary"
+      "status"
+      "actions";
+    gap: 8px;
   }
 
   body:not(.row-mode) .control-primary {
-    grid-column: 1 / -1;
+    grid-area: primary;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "mode value"
+      "move move";
+    gap: 8px 10px;
+    align-items: center;
+  }
+
+  body:not(.row-mode) .control-primary .input-mode-controls {
+    grid-area: mode;
+  }
+
+  body:not(.row-mode) .control-primary .move-value-group {
+    grid-area: value;
+  }
+
+  body:not(.row-mode) .control-primary .move-actions {
+    grid-area: move;
+    justify-self: start;
   }
 
   body:not(.row-mode) .controls .status {
+    grid-area: status;
     align-items: flex-start;
     flex-direction: column;
     gap: 5px;
   }
 
   body:not(.row-mode) .toolbar-actions {
-    align-self: end;
+    grid-area: actions;
+    justify-self: start;
   }
 
   body:not(.row-mode) .board-wrap {
@@ -1126,8 +1156,26 @@ body.row-mode .controls {
 
 body.row-mode .control-primary {
   grid-area: primary;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    "mode value"
+    "move move";
   gap: 4px 6px;
+  align-items: center;
+}
+
+body.row-mode .control-primary .input-mode-controls {
+  grid-area: mode;
+}
+
+body.row-mode .control-primary .move-value-group {
+  grid-area: value;
+}
+
+body.row-mode .control-primary .move-actions {
+  grid-area: move;
+  justify-self: start;
 }
 
 body.row-mode .toolbar-actions {
