@@ -8,6 +8,7 @@
   --special: #a78bfa;
   --start-goal: #fbbf24;
   --squid-color: #22d3ee;
+  --squid-contrast: #ffffff;
 }
 
 * {
@@ -376,7 +377,65 @@ button.primary {
   display: grid;
   gap: 4px;
   position: relative;
+  isolation: isolate;
   transform-origin: top center;
+}
+
+.board-route {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.board-route path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.route-outline {
+  stroke: #7b8491;
+  stroke-width: calc(var(--route-width) * 1.34);
+}
+
+.route-base {
+  stroke: #4b5563;
+  stroke-width: var(--route-width);
+}
+
+.route-groove {
+  stroke: #303844;
+  stroke-width: calc(var(--route-width) * 0.28);
+  opacity: 0.9;
+}
+
+.route-painted {
+  stroke: var(--squid-color);
+  stroke-width: calc(var(--route-width) * 0.62);
+  filter: drop-shadow(0 0 1px #303844);
+}
+
+.board-route .route-ink-splat {
+  fill: var(--squid-color);
+  stroke: color-mix(in srgb, var(--squid-color) 72%, #303844 28%);
+  stroke-width: max(1px, calc(var(--route-cell-size) * 0.018));
+  opacity: 0.96;
+}
+
+.route-turn-arrow,
+.route-next-arrow {
+  fill: #c5cbd3;
+  stroke: #303844;
+  stroke-width: max(1px, calc(var(--route-cell-size) * 0.018));
+  stroke-linejoin: round;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.45));
+}
+
+.route-turn-arrow {
+  opacity: 0.82;
 }
 
 .board.wide.responsive {
@@ -409,6 +468,7 @@ button.primary {
 .cell {
   aspect-ratio: 1 / 1;
   position: relative;
+  z-index: 2;
   border-radius: 16px;
   background: #fff;
   color: #111827;
@@ -475,7 +535,7 @@ button.primary {
 .cell.special {
   border-color: var(--special);
   transform: scale(1.03);
-  z-index: 1;
+  z-index: 3;
   box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2);
 }
 
@@ -513,7 +573,12 @@ button.primary {
 }
 
 .cell.current {
-  outline: 3px solid #ef4444;
+  z-index: 5;
+  outline: 0;
+  box-shadow:
+    0 0 0 max(2px, calc(var(--route-cell-size) * 0.024)) var(--squid-contrast),
+    0 0 0 max(5px, calc(var(--route-cell-size) * 0.055)) var(--squid-color),
+    0 0 0 max(7px, calc(var(--route-cell-size) * 0.073)) #303844;
 }
 
 .cell.current:not(.sub):not(.special) {
@@ -612,81 +677,6 @@ button.primary {
   display: none;
 }
 
-
-@media (max-width: 768px) {
-  .app {
-    padding: 12px;
-  }
-
-  .status {
-    top: 4px;
-  }
-
-  .board-wrap {
-    max-height: 68vh;
-  }
-
-  .board.wide.responsive {
-    grid-template-columns: repeat(10, minmax(0, 1fr));
-  }
-
-  .board.tall.responsive {
-    width: 100%;
-  }
-
-  .cell .weapon-label {
-    -webkit-line-clamp: 5;
-  }
-
-  .site-footer {
-    font-size: 10px;
-  }
-
-  .player-token {
-    width: 20px;
-    height: 20px;
-    transition-duration: 140ms;
-  }
-
-  .player-token::before {
-    filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.3));
-    animation-duration: 0.7s;
-  }
-}
-
-@media (min-width: 1200px) and (min-aspect-ratio: 4/3) {
-  .app {
-    max-width: min(96vw, 1900px);
-    grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
-    grid-template-areas:
-      "header board"
-      "controls board"
-      "status board";
-    align-items: start;
-  }
-
-  .app-header {
-    grid-area: header;
-  }
-
-  .controls {
-    grid-area: controls;
-  }
-
-  .status {
-    grid-area: status;
-  }
-
-  .board-wrap {
-    grid-area: board;
-    max-height: calc(100vh - 32px);
-  }
-
-  .site-footer {
-    grid-column: 2;
-    justify-self: start;
-  }
-}
 
 @media (prefers-reduced-motion: reduce) {
   .player-token {
@@ -940,83 +930,8 @@ button.primary {
   padding: 7px 8px;
 }
 
-/* The wide desktop layout keeps the shared controls on the left and the board on the right. */
-@media (min-width: 1200px) and (min-aspect-ratio: 4/3) {
-  body:not(.row-mode) .app {
-    grid-template-columns: minmax(330px, 430px) minmax(0, 1fr);
-    grid-template-rows: auto auto 1fr;
-    grid-template-areas:
-      "header board"
-      "controls board"
-      ". board";
-    align-items: start;
-    align-content: start;
-  }
-
-  body:not(.row-mode) .app-header {
-    grid-area: header;
-  }
-
-  body:not(.row-mode) .controls {
-    grid-area: controls;
-    position: static;
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      "primary"
-      "status"
-      "actions";
-    gap: 8px;
-  }
-
-  body:not(.row-mode) .control-primary {
-    grid-area: primary;
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    grid-template-areas:
-      "mode value"
-      "move move";
-    gap: 8px 10px;
-    align-items: center;
-  }
-
-  body:not(.row-mode) .control-primary .input-mode-controls {
-    grid-area: mode;
-  }
-
-  body:not(.row-mode) .control-primary .move-value-group {
-    grid-area: value;
-  }
-
-  body:not(.row-mode) .control-primary .move-actions {
-    grid-area: move;
-    justify-self: start;
-  }
-
-  body:not(.row-mode) .controls .status {
-    grid-area: status;
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 5px;
-  }
-
-  body:not(.row-mode) .toolbar-actions {
-    grid-area: actions;
-    justify-self: start;
-  }
-
-  body:not(.row-mode) .board-wrap {
-    grid-area: board;
-    max-height: calc(100vh - 32px);
-  }
-
-  body:not(.row-mode) .site-footer {
-    grid-column: 2;
-    justify-self: start;
-  }
-}
-
 /* Horizontal one-row board. It uses the same controls, only the page composition changes. */
-body.row-mode .app {
+body.view-layout-horizontal.row-mode .app {
   width: 100%;
   max-width: none;
   height: max(180px, 100dvh);
@@ -1031,26 +946,26 @@ body.row-mode .app {
   align-items: stretch;
 }
 
-body.row-mode .app-header {
+body.view-layout-horizontal.row-mode .app-header {
   grid-area: header;
   display: grid;
   place-items: center;
   padding: 6px;
 }
 
-body.row-mode .app-header h1 {
+body.view-layout-horizontal.row-mode .app-header h1 {
   margin: 0;
   font-size: clamp(14px, 1.4vw, 21px);
   line-height: 1.35;
   text-align: center;
 }
 
-body.row-mode .header-note,
-body.row-mode .site-footer {
+body.view-layout-horizontal.row-mode .header-note,
+body.view-layout-horizontal.row-mode .site-footer {
   display: none;
 }
 
-body.row-mode .controls {
+body.view-layout-horizontal.row-mode .controls {
   grid-area: controls;
   position: static;
   min-width: 0;
@@ -1063,7 +978,7 @@ body.row-mode .controls {
   align-content: center;
 }
 
-body.row-mode .control-primary {
+body.view-layout-horizontal.row-mode .control-primary {
   grid-area: primary;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -1074,51 +989,51 @@ body.row-mode .control-primary {
   align-items: center;
 }
 
-body.row-mode .control-primary .input-mode-controls {
+body.view-layout-horizontal.row-mode .control-primary .input-mode-controls {
   grid-area: mode;
 }
 
-body.row-mode .control-primary .move-value-group {
+body.view-layout-horizontal.row-mode .control-primary .move-value-group {
   grid-area: value;
 }
 
-body.row-mode .control-primary .move-actions {
+body.view-layout-horizontal.row-mode .control-primary .move-actions {
   grid-area: move;
   justify-self: start;
 }
 
-body.row-mode .toolbar-actions {
+body.view-layout-horizontal.row-mode .toolbar-actions {
   grid-area: actions;
 }
 
-body.row-mode .controls .status {
+body.view-layout-horizontal.row-mode .controls .status {
   grid-area: status;
   flex-wrap: nowrap;
   gap: 8px;
   font-size: 12px;
 }
 
-body.row-mode .controls .status .position-line {
+body.view-layout-horizontal.row-mode .controls .status .position-line {
   font-size: 13px;
 }
 
-body.row-mode .controls .status .weapon-line {
+body.view-layout-horizontal.row-mode .controls .status .weapon-line {
   flex: 1;
 }
 
-body.row-mode .input-mode-controls {
+body.view-layout-horizontal.row-mode .input-mode-controls {
   font-size: 12px;
   gap: 6px;
 }
 
-body.row-mode .move-value-group p {
+body.view-layout-horizontal.row-mode .move-value-group p {
   font-size: 12px;
 }
 
-body.row-mode .control-primary button,
-body.row-mode .toolbar-actions button,
-body.row-mode .more-actions summary,
-body.row-mode #manualStepInput {
+body.view-layout-horizontal.row-mode .control-primary button,
+body.view-layout-horizontal.row-mode .toolbar-actions button,
+body.view-layout-horizontal.row-mode .more-actions summary,
+body.view-layout-horizontal.row-mode #manualStepInput {
   min-height: 34px;
   padding: 4px 6px;
   font-size: 12px;
@@ -1166,7 +1081,7 @@ body.row-mode .board.horizontal .cell {
   white-space: nowrap;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 640px) {
   .app {
     padding: 8px;
     gap: 8px;
@@ -1203,33 +1118,7 @@ body.row-mode .board.horizontal .cell {
   .toolbar-actions {
     align-self: center;
   }
-}
 
-@media (max-width: 799px) {
-  body.row-mode .app {
-    height: max(340px, 100dvh);
-    min-height: 340px;
-    grid-template-columns: 76px minmax(0, 1fr);
-    grid-template-rows: 130px minmax(128px, 1fr);
-    grid-template-areas:
-      "header controls"
-      "board board";
-  }
-
-  body.row-mode .controls {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-
-  body.row-mode .controls .status {
-    min-width: 0;
-  }
-
-  body.row-mode .controls .status .weapon-line {
-    max-width: 100%;
-  }
-}
-
-@media (max-width: 520px) {
   .input-mode-controls {
     width: 100%;
   }
@@ -1258,6 +1147,31 @@ body.row-mode .board.horizontal .cell {
     position: fixed;
     top: auto;
     right: 10px;
+  }
+
+  .return-current-btn {
+    width: 82px;
+    min-width: 82px;
+    padding-inline: 8px;
+  }
+
+  .cell .weapon-label {
+    -webkit-line-clamp: 5;
+  }
+
+  .site-footer {
+    font-size: 10px;
+  }
+
+  .player-token {
+    width: 20px;
+    height: 20px;
+    transition-duration: 140ms;
+  }
+
+  .player-token::before {
+    filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.3));
+    animation-duration: 0.7s;
   }
 }
 
@@ -1311,5 +1225,397 @@ body.row-mode .board.horizontal .cell {
   .goal-dialog-actions {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 6px;
+  }
+}
+
+/* Custom board layout (#7 phase 1) */
+.custom-display-settings {
+  display: grid;
+  gap: 12px;
+  padding-top: 2px;
+}
+
+.custom-setting-group {
+  display: grid;
+  gap: 6px;
+}
+
+.custom-setting-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #e5e7eb;
+}
+
+.compact-options label {
+  min-width: 48px;
+  justify-content: center;
+}
+
+.compact-options label.hidden {
+  display: none;
+}
+
+.wrap-setting {
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.number-setting {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.number-setting input {
+  width: 86px;
+  padding: 6px 8px;
+}
+
+.settings-dialog {
+  width: min(720px, calc(100vw - 24px));
+}
+
+.board-viewport {
+  min-width: max-content;
+  justify-content: flex-start;
+}
+
+.board.fixed {
+  width: max-content;
+  flex: none;
+}
+
+.return-current-btn {
+  width: 92px;
+  min-width: 92px;
+}
+
+.return-current-btn:disabled {
+  opacity: 0.5;
+}
+
+body.view-layout-horizontal:not(.row-mode) .app {
+  width: 100%;
+  max-width: min(96vw, 1900px);
+  min-height: 100dvh;
+  grid-template-columns: minmax(300px, 430px) minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "header board"
+    "controls board"
+    ". board"
+    ". footer";
+  align-items: start;
+  align-content: start;
+}
+
+body.view-layout-horizontal:not(.row-mode).panel-right .app {
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 430px);
+  grid-template-areas:
+    "board header"
+    "board controls"
+    "board ."
+    "footer .";
+}
+
+body.view-layout-horizontal .app-header {
+  grid-area: header;
+}
+
+body.view-layout-horizontal .controls {
+  grid-area: controls;
+  position: static;
+}
+
+body.view-layout-horizontal:not(.row-mode) .controls {
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    "primary"
+    "status"
+    "actions";
+  gap: 8px;
+}
+
+body.view-layout-horizontal:not(.row-mode) .control-primary {
+  grid-area: primary;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    "mode value"
+    "move move";
+  gap: 8px 10px;
+  align-items: center;
+}
+
+body.view-layout-horizontal:not(.row-mode) .control-primary .input-mode-controls {
+  grid-area: mode;
+}
+
+body.view-layout-horizontal:not(.row-mode) .control-primary .move-value-group {
+  grid-area: value;
+}
+
+body.view-layout-horizontal:not(.row-mode) .control-primary .move-actions {
+  grid-area: move;
+  justify-self: start;
+}
+
+body.view-layout-horizontal:not(.row-mode) .controls .status {
+  grid-area: status;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 5px;
+}
+
+body.view-layout-horizontal:not(.row-mode) .toolbar-actions {
+  grid-area: actions;
+  justify-self: start;
+}
+
+body.view-layout-horizontal .board-wrap {
+  grid-area: board;
+  width: 100%;
+  max-height: calc(100dvh - 32px);
+}
+
+body.view-layout-horizontal .site-footer {
+  grid-area: footer;
+}
+
+body.view-layout-horizontal.row-mode .app {
+  width: 100%;
+  max-width: none;
+  min-height: 180px;
+  height: max(180px, 100dvh);
+  grid-template-columns: clamp(76px, 8vw, 110px) clamp(390px, 32vw, 470px) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: "header controls board";
+}
+
+body.view-layout-horizontal.row-mode .board-wrap {
+  overflow: auto;
+}
+
+body.view-layout-horizontal.row-mode .board-viewport {
+  align-items: flex-start;
+}
+
+body.view-layout-horizontal.row-mode.panel-right .app {
+  grid-template-columns: minmax(0, 1fr) clamp(390px, 32vw, 470px) clamp(76px, 8vw, 110px);
+  grid-template-areas: "board controls header";
+}
+
+body.view-layout-vertical .app {
+  width: 100%;
+  max-width: 1400px;
+  min-height: 100dvh;
+  height: auto;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(280px, 1fr) auto;
+  grid-template-areas:
+    "header"
+    "controls"
+    "board"
+    "footer";
+  align-content: start;
+}
+
+body.view-layout-vertical.panel-bottom .app {
+  grid-template-rows: minmax(280px, 1fr) auto auto auto;
+  grid-template-areas:
+    "board"
+    "header"
+    "controls"
+    "footer";
+}
+
+body.view-layout-vertical .app-header {
+  grid-area: header;
+}
+
+body.view-layout-vertical .controls {
+  grid-area: controls;
+  position: static;
+}
+
+body.view-layout-vertical .board-wrap {
+  grid-area: board;
+  width: 100%;
+  min-height: 280px;
+  max-height: min(68dvh, 980px);
+}
+
+body.view-layout-vertical.row-mode .board-wrap {
+  height: 240px;
+  min-height: 180px;
+}
+
+body.view-layout-vertical .site-footer {
+  display: block;
+  grid-area: footer;
+}
+
+@media (max-width: 640px) {
+  body.view-layout-horizontal.row-mode .app,
+  body.view-layout-horizontal.row-mode.panel-right .app {
+    min-width: 760px;
+    grid-template-columns: 76px minmax(390px, 470px) minmax(280px, 1fr);
+    grid-template-rows: minmax(180px, 100dvh);
+    grid-template-areas: "header controls board";
+  }
+
+  body.view-layout-horizontal.row-mode.panel-right .app {
+    grid-template-columns: minmax(280px, 1fr) minmax(390px, 470px) 76px;
+    grid-template-areas: "board controls header";
+  }
+
+  body.view-layout-horizontal:not(.row-mode) .app {
+    min-width: 720px;
+  }
+}
+
+/* Issue #7 visual follow-up: readable settings, centered single column, and a fixed overview map. */
+.range-control {
+  grid-template-columns: minmax(120px, 1fr) minmax(4.5em, max-content);
+}
+
+.custom-display-disclosure {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--panel) 94%, white 6%);
+}
+
+.custom-display-disclosure > summary {
+  padding: 9px 11px;
+  cursor: pointer;
+  font-weight: 700;
+  color: #e5e7eb;
+}
+
+.custom-display-disclosure[open] > summary {
+  border-bottom: 1px solid var(--line);
+}
+
+.custom-display-disclosure .custom-display-settings {
+  padding: 11px;
+}
+
+.return-current-btn {
+  margin: 0 0 8px;
+}
+
+body.row-mode .return-current-btn {
+  margin-bottom: -44px;
+}
+
+body.row-mode .board-viewport {
+  padding-left: 112px;
+}
+
+.board-viewport.single-column-view {
+  width: 100%;
+  min-width: 100%;
+  justify-content: center;
+}
+
+.board-viewport.overview-view {
+  width: 100%;
+  min-width: 100%;
+  justify-content: center;
+  align-items: center;
+}
+
+.board.overview-map {
+  width: max-content;
+  flex: none;
+}
+
+.board.overview-map .cell {
+  min-width: 0;
+  min-height: 0;
+  padding: 1px;
+  border-width: 1px;
+  border-radius: clamp(2px, calc(var(--overview-cell-size) * 0.12), 10px);
+  font-size: clamp(4px, calc(var(--overview-cell-size) * 0.14), 9px);
+  transform: none;
+  box-shadow: none;
+}
+
+.board.overview-map .cell.current,
+.board.overview-map .cell.current.sub,
+.board.overview-map .cell.current.special {
+  transform: none;
+  box-shadow:
+    0 0 0 1px var(--squid-contrast),
+    0 0 0 2px var(--squid-color),
+    0 0 0 3px #303844;
+}
+
+.board.overview-map .cell.start,
+.board.overview-map .cell.goal {
+  padding: 1px;
+}
+
+.board.overview-map .cell .cell-image {
+  border-radius: clamp(1px, calc(var(--overview-cell-size) * 0.1), 8px);
+}
+
+.board.overview-map .cell .marker-label,
+.board.overview-map .cell.start .marker-label,
+.board.overview-map .cell.goal .marker-label {
+  font-size: clamp(5px, calc(var(--overview-cell-size) * 0.18), 13px);
+  letter-spacing: 0;
+}
+
+.board.overview-map .player-token {
+  width: clamp(7px, calc(var(--overview-cell-size) * 0.36), 18px);
+  height: clamp(7px, calc(var(--overview-cell-size) * 0.36), 18px);
+}
+
+.board.overview-map .player-token::before {
+  border-width: 1px;
+}
+
+@media (min-width: 1000px) and (max-height: 400px) {
+  .settings-dialog {
+    width: calc(100vw - 24px);
+  }
+
+  .settings-dialog .settings-body {
+    grid-template-columns: 1.1fr 1fr 0.9fr 1.1fr;
+    gap: 12px;
+  }
+
+  .settings-dialog .display-settings {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .settings-dialog .size-settings {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .settings-dialog .behavior-settings {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .settings-dialog .color-settings {
+    grid-column: 4;
+    grid-row: 1;
+  }
+
+  .settings-dialog .custom-display-disclosure {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .settings-dialog .custom-display-disclosure[open] .custom-display-settings {
+    grid-template-columns: repeat(5, minmax(150px, 1fr));
+    align-items: start;
   }
 }
