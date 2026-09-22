@@ -29,20 +29,20 @@
             <label><input type="radio" name="inputMode" value="manual" />手入力</label>
           </div>
 
-          <div id="diceBox" class="group move-group">
-            <button id="rollBtn" class="primary">サイコロを振る</button>
+          <div id="diceBox" class="group move-value-group">
             <p id="diceResult">出目: -</p>
           </div>
 
-          <div id="manualBox" class="group move-group hidden">
+          <div id="manualBox" class="group move-value-group hidden">
             <label for="manualStepInput" class="sr-only">進む数</label>
-            <div class="manual-row">
-              <input id="manualStepInput" type="number" min="0" value="0" aria-label="進む数" />
-              <button id="manualMoveBtn" class="primary">進む</button>
-            </div>
+            <input id="manualStepInput" type="number" min="0" value="0" aria-label="進む数" />
           </div>
 
-          <button id="undoBtn" type="button" disabled>1手戻す</button>
+          <div class="move-actions">
+            <button id="rollBtn" class="primary" type="button">サイコロを振る</button>
+            <button id="manualMoveBtn" class="primary hidden" type="button">進む</button>
+            <button id="undoBtn" type="button" disabled>1手戻す</button>
+          </div>
         </div>
 
         <div class="status" aria-live="polite">
