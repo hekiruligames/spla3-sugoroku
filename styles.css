@@ -882,7 +882,8 @@ button.primary {
 
 .move-actions #rollBtn,
 .move-actions #manualMoveBtn {
-  width: clamp(104px, 8vw, 128px);
+  width: 10em;
+  min-width: 10em;
   flex: 0 0 auto;
 }
 
