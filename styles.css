@@ -75,44 +75,6 @@ body {
   gap: 10px;
 }
 
-.play-controls {
-  display: grid;
-  gap: 10px;
-}
-
-.utility-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px clamp(18px, 5vw, 34px);
-  flex-wrap: wrap;
-}
-
-.reset-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.utility-actions button {
-  min-height: 40px;
-}
-
-.settings-panel {
-  border-top: 1px solid color-mix(in srgb, var(--line) 75%, transparent);
-  padding-top: 8px;
-}
-
-.settings-panel summary {
-  cursor: pointer;
-  color: #e5e7eb;
-  font-weight: 700;
-}
-
-.settings-panel[open] summary {
-  margin-bottom: 10px;
-}
-
 .settings-body {
   display: grid;
   gap: 10px;
@@ -222,13 +184,6 @@ input[type="radio"], input[type="checkbox"] {
   border-color: #f87171;
 }
 
-.compact-grid {
-  display: grid;
-  grid-template-columns: auto minmax(180px, 1fr);
-  gap: 8px;
-  align-items: center;
-}
-
 .group {
   display: grid;
   gap: 6px;
@@ -244,25 +199,6 @@ input[type="radio"], input[type="checkbox"] {
   margin: -4px 0 0;
   font-size: 12px;
   color: #9ca3af;
-}
-
-.inline-pairs {
-  display: grid;
-  gap: 8px;
-}
-
-.pair-row {
-  display: grid;
-  grid-template-columns: auto minmax(180px, 1fr);
-  gap: 8px;
-  align-items: center;
-}
-
-.range-row {
-  display: grid;
-  grid-template-columns: auto minmax(180px, 1fr);
-  gap: 8px;
-  align-items: center;
 }
 
 .range-control {
@@ -329,24 +265,6 @@ button.primary {
   border-color: var(--accent-2);
   color: #041018;
   font-weight: 700;
-}
-
-.view-toggle {
-  border-color: #64748b;
-  background: #172033;
-  color: #e5e7eb;
-  font-weight: 700;
-}
-
-.manual-row {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  align-items: center;
-}
-
-.manual-row > * {
-  width: 100%;
 }
 
 .status {
@@ -698,22 +616,6 @@ button.primary {
 @media (max-width: 768px) {
   .app {
     padding: 12px;
-  }
-
-  .compact-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .inline-pairs {
-    grid-template-columns: 1fr;
-  }
-
-  .pair-row {
-    grid-template-columns: 1fr;
-  }
-
-  .range-row {
-    grid-template-columns: 1fr;
   }
 
   .status {
