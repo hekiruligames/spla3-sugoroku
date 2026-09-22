@@ -880,6 +880,12 @@ button.primary {
   flex: 0 0 auto;
 }
 
+.move-actions #rollBtn,
+.move-actions #manualMoveBtn {
+  width: clamp(104px, 8vw, 128px);
+  flex: 0 0 auto;
+}
+
 .control-primary button,
 .toolbar-actions button,
 .more-actions summary {
