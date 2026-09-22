@@ -95,25 +95,81 @@
 
         <div class="settings-body">
           <fieldset class="display-settings">
-            <legend>表示モード</legend>
+            <legend>表示プリセット</legend>
             <div class="display-options">
-              <label><input type="radio" name="displayMode" value="row" />横1行</label>
-              <label><input type="radio" name="displayMode" value="1" />縦1列</label>
-              <label><input type="radio" name="displayMode" value="5" />5列</label>
-              <label><input type="radio" name="displayMode" value="10" />10列</label>
-              <label><input type="radio" name="displayMode" value="15" />15列</label>
-              <label><input type="radio" name="displayMode" value="20" />20列</label>
+              <label><input type="radio" name="displayPreset" value="row" />横1行</label>
+              <label><input type="radio" name="displayPreset" value="column" />縦1列</label>
+              <label><input type="radio" name="displayPreset" value="5" />5列</label>
+              <label><input type="radio" name="displayPreset" value="10" />10列</label>
+              <label><input type="radio" name="displayPreset" value="custom" />カスタム</label>
             </div>
-            <p class="setting-hint">初回のみ画面に合わせて初期値を選びます。以後は選択した表示を保持します。</p>
+            <p class="setting-hint">盤面の並びと操作パネル位置を切り替えます。マスサイズは保持されます。</p>
           </fieldset>
 
-          <div class="size-settings">
-            <label id="singleColScaleLabel" for="singleColScale">縦1列サイズ</label>
-            <div class="range-control">
-              <input id="singleColScale" type="range" min="1" max="3" step="0.1" value="1.5" />
-              <output id="singleColScaleValue" for="singleColScale">1.5倍</output>
+          <details id="customDisplayDetails" class="custom-display-disclosure">
+            <summary>カスタム表示を調整</summary>
+            <fieldset class="custom-display-settings">
+              <legend class="sr-only">カスタム表示</legend>
+
+            <div class="custom-setting-group">
+              <span class="custom-setting-label">画面レイアウト</span>
+              <div class="display-options compact-options">
+                <label><input type="radio" name="screenLayout" value="horizontal" />横型</label>
+                <label><input type="radio" name="screenLayout" value="vertical" />縦型</label>
+              </div>
             </div>
-            <p class="setting-hint" id="sizeHint">横1行・縦1列表示で調整できます。</p>
+
+            <div class="custom-setting-group">
+              <span class="custom-setting-label">操作パネル位置</span>
+              <div class="display-options compact-options" id="panelPositionOptions">
+                <label data-layout-option="horizontal"><input type="radio" name="panelPosition" value="left" />左</label>
+                <label data-layout-option="horizontal"><input type="radio" name="panelPosition" value="right" />右</label>
+                <label data-layout-option="vertical"><input type="radio" name="panelPosition" value="top" />上</label>
+                <label data-layout-option="vertical"><input type="radio" name="panelPosition" value="bottom" />下</label>
+              </div>
+            </div>
+
+            <div class="custom-setting-group">
+              <span class="custom-setting-label">進む方向</span>
+              <div class="display-options compact-options">
+                <label><input type="radio" name="travelDirection" value="right" aria-label="右へ進む" />→</label>
+                <label><input type="radio" name="travelDirection" value="left" aria-label="左へ進む" />←</label>
+                <label><input type="radio" name="travelDirection" value="up" aria-label="上へ進む" />↑</label>
+                <label><input type="radio" name="travelDirection" value="down" aria-label="下へ進む" />↓</label>
+              </div>
+            </div>
+
+            <div class="custom-setting-group wrap-setting">
+              <label class="inline-check">
+                <input id="wrapEnabled" type="checkbox" />
+                指定したマス数ごとに折り返す
+              </label>
+              <label class="number-setting" for="wrapCount">
+                1行・1列のマス数
+                <input id="wrapCount" type="number" min="1" max="100" value="10" inputmode="numeric" />
+              </label>
+              <p class="setting-hint">START・GOALも1マスとして数えます。</p>
+            </div>
+
+            <div class="custom-setting-group">
+              <span class="custom-setting-label">折り返し方向</span>
+              <div class="display-options compact-options" id="wrapDirectionOptions">
+                <label data-direction-option="horizontal"><input type="radio" name="wrapDirection" value="up" aria-label="上へ折り返す" />上</label>
+                <label data-direction-option="horizontal"><input type="radio" name="wrapDirection" value="down" aria-label="下へ折り返す" />下</label>
+                <label data-direction-option="vertical"><input type="radio" name="wrapDirection" value="left" aria-label="左へ折り返す" />左</label>
+                <label data-direction-option="vertical"><input type="radio" name="wrapDirection" value="right" aria-label="右へ折り返す" />右</label>
+              </div>
+            </div>
+            </fieldset>
+          </details>
+
+          <div class="size-settings">
+            <label for="cellScale">マスサイズ</label>
+            <div class="range-control">
+              <input id="cellScale" type="range" min="0.5" max="3" step="0.1" value="1" />
+              <output id="cellScaleValue" for="cellScale">1.0倍</output>
+            </div>
+            <p class="setting-hint">盤面が表示領域からはみ出す場合はスクロールできます。</p>
           </div>
 
           <div class="behavior-settings">
@@ -121,14 +177,11 @@
               <input id="followCurrent" type="checkbox" checked />
               現在地へ自動追従
             </label>
-            <p id="followCurrentNote" class="follow-note hidden">
-              2カラム表示で10/15/20列のときは、マップ全体表示のため自動追従は行いません。
-            </p>
             <label class="inline-check">
-              <input id="debugInfo" type="checkbox" />
+              <input id="debugInfo" type="checkbox" aria-describedby="debugInfoHint" />
               開発用情報
             </label>
-            <p class="setting-hint">現在のマスの種類を表示します。</p>
+            <p id="debugInfoHint" class="setting-hint">開発用情報をオンにすると、現在のマスの種類を表示します。</p>
           </div>
 
           <fieldset class="color-settings">
