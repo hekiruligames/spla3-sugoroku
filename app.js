@@ -4,6 +4,7 @@ const RAW_MANIFEST_PATH = "data/raw-manifest.json";
 const SUB_IMAGE_MAP_PATH = "data/sub-image-map.json";
 const SPECIAL_IMAGE_MAP_PATH = "data/special-image-map.json";
 const MOVE_STEP_MS = 160;
+const UNDO_STEP_MS = 60;
 const TOKEN_EDGE_OFFSET = 2;
 const SINGLE_COL_BASE_SIZE = 96;
 const SINGLE_COL_SCALE_MIN = 1;
@@ -462,6 +463,8 @@ function applyInputMode(value) {
   });
   diceBox.classList.toggle("hidden", value !== "dice");
   manualBox.classList.toggle("hidden", value !== "manual");
+  rollBtn.classList.toggle("hidden", value !== "dice");
+  manualMoveBtn.classList.toggle("hidden", value !== "manual");
 }
 
 function setControlsDisabled(disabled) {
@@ -926,17 +929,34 @@ function clearHistory() {
   updateUndoButton();
 }
 
-function undoLastMove() {
+async function undoLastMove() {
   if (state.isAnimating || state.history.length === 0) {
     return;
   }
 
   closeGoalDialog();
   const previousState = state.history.pop();
-  const previousPosition = state.position;
-  state.position = previousState.position;
+  const target = previousState.position;
+
+  state.isAnimating = true;
+  setControlsDisabled(true);
+
+  const isWideTwoPane = isWideTwoPaneLayout();
+  const isCompactViewport = window.matchMedia("(max-width: 900px)").matches;
+  const cols = getDisplayCols();
+  const smoothFollow = isRowMode() || cols === 1 || (!isWideTwoPane && !isCompactViewport);
+  const stepDelay = reducedMotionQuery.matches ? 30 : UNDO_STEP_MS;
+
+  while (state.position > target) {
+    const prevPosition = state.position;
+    state.position -= 1;
+    updatePositionView(prevPosition, { animateToken: true, smoothFollow });
+    await wait(stepDelay);
+  }
+
   diceResult.textContent = previousState.diceText;
-  updatePositionView(previousPosition, { animateToken: false, smoothFollow: true });
+  state.isAnimating = false;
+  setControlsDisabled(false);
   updateUndoButton();
 }
 
@@ -1115,13 +1135,17 @@ manualStepInput.addEventListener("keydown", (e) => {
   }
 });
 
-undoBtn.addEventListener("click", undoLastMove);
+undoBtn.addEventListener("click", () => {
+  void undoLastMove();
+});
 
 resetBtn.addEventListener("click", resetGame);
 
 regenBtn.addEventListener("click", confirmRegenerateGame);
 
-goalUndoBtn.addEventListener("click", undoLastMove);
+goalUndoBtn.addEventListener("click", () => {
+  void undoLastMove();
+});
 
 goalResetBtn.addEventListener("click", resetGame);
 
