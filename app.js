@@ -1076,6 +1076,29 @@ settingsDialog.addEventListener("close", () => {
   settingsBtn.focus({ preventScroll: true });
 });
 
+settingsDialog.addEventListener("pointerdown", (event) => {
+  if (event.target !== settingsDialog) {
+    return;
+  }
+
+  const rect = settingsDialog.getBoundingClientRect();
+  const clickedOutside =
+    event.clientX < rect.left ||
+    event.clientX > rect.right ||
+    event.clientY < rect.top ||
+    event.clientY > rect.bottom;
+
+  if (clickedOutside) {
+    settingsDialog.close();
+  }
+});
+
+document.addEventListener("pointerdown", (event) => {
+  if (moreActions.open && !moreActions.contains(event.target)) {
+    closeMoreActions();
+  }
+});
+
 returnCurrentBtn.addEventListener("click", () => {
   scrollToCurrent(true, { force: true });
   window.setTimeout(updateReturnCurrentButton, 350);
