@@ -1,49 +1,62 @@
-# Issue #8 実装開始時の手順
+# Issue #8 実装記録・アーキテクチャ
 
-Issue #7のマージ後、最新の `main` を基点にIssue #8専用ブランチ／worktreeを作成する。Issue #7のworktreeや古い `dev` は基点にしない。
+このファイルは、Issue #8「キャラクターがマスのタイプに応じて道を攻撃・塗装して移動する演出」の実装記録です。
 
-## 0. 素材を保全する
+当初の実装計画は PR #10 で完了したため、現在は保守・拡張時に参照する構成資料として残します。
 
-現在の `assets/concepts/`、`assets/player/`、`assets/effects/`、`assets/packages/` は未追跡である。Issue #8用worktreeを作成したあと、同worktreeへコピーし、最初に素材だけの独立コミットとして保存する。
+## 完了状況
 
-## 1. Issue #7のルートを再利用可能にする
+- Issue #7の盤面ルート基盤を再利用
+- スライム / イカ型 / タコ型の待機・移動表示を追加
+- マス種別に応じた5種類の攻撃を追加
+- 攻撃 → 塗装 → 移動 → 着地の状態遷移を追加
+- Uターン地点の跳弾表現を追加
+- Undo・GOAL・色変更・表示変更へ追従
+- 移動速度設定と reduced motion 対応を追加
 
-Issue #7では、SVG描画に必要な `segments` が `renderBoardRoute()` のローカル変数になっている。Issue #8の攻撃とキャラクター移動から同じ座標を使用できるよう、最初にルートモデルの生成と描画を分離する。
+## 1. ルートモデル
 
-想定する境界は次のとおり。
+Issue #7でSVG描画用に生成していたルートを、攻撃とキャラクター移動でも共有できるモデルへ分離しました。
+
+主要な関数は次のとおりです。
 
 ```text
 buildBoardRouteModel()
   -> width / height / cellSize
   -> centers[]
   -> segments[]
-       index / from / to / folded / SVG path / control points
+       index / from / to / folded / SVG path / length / distanceTable
 
-getSegmentPointAndTangent(segment, progress)
+getSegmentPointAndTangent(segment, t)
   -> point / tangent
 
-renderBoardRoute(routeModel, paintedPosition)
+getSegmentPointAtProgress(segment, progress)
+  -> 距離補正した point / tangent
+
+renderBoardRoute()
   -> 静的な道・矢印・通過済み表示
 ```
 
-曲線上を一定速度で動かすため、U字カーブは制御点だけでなく近似長も保持する。初期版は各ベジェ曲線を16〜24分割して距離表を作れば十分。
+U字カーブを含む区間は24サンプルの近似距離表を作り、曲線でも進行率に対して極端な速度差が出ないようにしています。
 
-## 2. 論理状態と表示状態を分ける
+## 2. 論理状態
 
-保存・Undoの対象はピクセルや途中フレームではなく、次の論理状態とする。
+ゲーム進行と演出状態は、ピクセル位置ではなく論理状態を基準にします。
+
+主な状態は次のとおりです。
 
 ```text
 position
-moveStartPosition
-moveTargetPosition
-attackType
 paintedUntilPosition
 animationPhase
+isAnimating
 ```
 
-通常保存するのは既存ゲーム状態と `position`。途中アニメーションはページ再読込後に復元せず、論理位置と塗装位置が一致する安定状態へ戻す。
+塗装済み画像そのものは保存せず、現在位置と `paintedUntilPosition` からルートを再描画します。
 
-## 3. 状態機械を追加する
+## 3. 状態機械
+
+移動区間ごとに次の順序で進行します。
 
 ```text
 IDLE
@@ -55,48 +68,102 @@ IDLE
   -> IDLE
 ```
 
-- `WINDUP`: 正面向き本体の変形だけを行う
-- `ATTACK`: マニフェストから選んだエフェクトをルート上へ流す
-- `PAINT`: 攻撃先端までの区間を選択色へ更新する
-- `MOVE`: 本体を同じルート上へ移動し、背後へ移動尾を表示する
-- `LANDING`: 最終マスで着地飛沫を再生する
+- `WINDUP`: キャラクター本体の攻撃前動作
+- `ATTACK`: 現在マスから決定したエフェクトをルート上へ流す
+- `PAINT`: 対象区間を選択色へ更新
+- `MOVE`: キャラクター本体を同じルート上へ移動
+- `LANDING`: 移動先で着地飛沫を表示
 
-アニメーション中は、サイコロ・手入力・Undo・リセット・再生成・色・表示設定をロックする。
+複数マス移動時も、攻撃タイプは移動開始時に1回だけ決定します。
 
-## 4. 素材の読み込み
+## 4. 攻撃タイプ
 
-- `assets/effects/manifest.json` を読み込む
-- 読み込み失敗時はエフェクトなしでもゲーム進行を継続する
-- PNG読み込み完了前の操作では、単純な円・線のフォールバックを使用するか、初回操作だけ短時間待機する
-- アニメーションWebPはランタイムで使わない
-- 色は選択色、白色時の境界はIssue #7のグラファイト色を利用する
+`assets/effects/manifest.json` の `attackMapping` と `data/raw-manifest.json` の武器カテゴリを使用します。
 
-## 5. 実装順
+```text
+SHOT  : shooter / maneuver / blaster / START
+BEAM  : charger / spinner / stringer
+WAVE  : roller / brush / wiper
+BOMB  : slosher / sub
+BURST : shelter / special
+GOAL  : 攻撃なし
+```
 
-1. 素材のみを保存
-2. ルートモデルの抽出。見た目を変えず既存#7確認を再実行
-3. 正面向きキャラクターの待機表示
-4. MOVEと移動尾
-5. LANDING
-6. SHOT
-7. BEAM / WAVE / BOMB / BURST
-8. UターンのRICOCHET
-9. 色変更、Undo、GOAL、reduced motion
-10. 全受入確認
+公式作品の武器形状・固有弾道を再現せず、既存カテゴリを入力として独自の抽象エフェクトへ割り当てます。
 
-## 6. 最低テスト行列
+## 5. 素材読み込み
 
-| 分類 | 条件 |
-|---|---|
-| キャラクター | スライム / イカ型 / タコ型 |
-| 方向 | → / ← / ↑ / ↓ |
-| ルート | 直線 / 横方向Uターン / 縦方向Uターン |
-| 出目 | 0 / 1 / 6 / GOALを越える値 |
-| 攻撃 | SHOT / BEAM / WAVE / BOMB / BURST |
-| 色 | 代表色2色以上 / 白 |
-| 表示 | 横1行 / 縦1列 / 5列 / 10列 / カスタム |
-| 倍率 | 0.5 / 1.0 / 3.0 |
-| 状態 | Undo / リセット / 再生成 / 見渡しから移動 |
-| 環境 | 通常 / 狭幅 / 1440×200 / reduced motion |
+- エフェクト定義は `assets/effects/manifest.json` から読み込む
+- PNGスプライトをアルファマスクとして利用し、選択色へ着色
+- WebPはプレビュー専用
+- マニフェスト読み込み失敗時は警告を出し、演出なしでもゲーム進行を継続
+- キャラクター素材は `assets/player/` を使用
 
-特に「攻撃が完了する前にキャラクターが動かない」「折り返しでも本体の顔が回転しない」「Undo後の塗装範囲と位置が一致する」を独立して確認する。
+## 6. キャラクター
+
+設定から次の3種類を選択できます。
+
+- スライム
+- イカ型
+- タコ型
+
+全方向でキャラクター本体は正面向きを維持します。進行方向は攻撃、移動尾、跳弾などの別レイヤーで表現します。
+
+キャラクター本体は body-mask を選択色へ着色し、light/dark-details を上へ重ねます。
+
+## 7. タイミングと速度設定
+
+基本時間は次のとおりです。
+
+```text
+WINDUP  110 ms
+ATTACK  230 ms / 区間
+PAINT    50 ms / 区間
+MOVE    240 ms / 区間
+LANDING 180 ms / 区間
+```
+
+速度設定の倍率:
+
+```text
+slow   1.25
+normal 1.00
+fast   0.68
+```
+
+`prefers-reduced-motion: reduce` の場合、軌跡アニメーションを省略して論理状態を即時に近い形で更新します。
+
+## 8. Undo・リセット・再生成
+
+- Undoでは攻撃を逆再生しない
+- 位置を戻すアニメーション後、`paintedUntilPosition` を現在位置へ合わせる
+- 「最初から」「盤面を再生成」では位置、塗装位置、アニメーション状態を初期化
+- 表示レイアウト変更ではゲーム進行状態を維持
+
+## 9. 操作ロック
+
+アニメーション実行中は、途中状態が壊れないよう進行操作、Undo、再生成、色・表示設定、キャラクター・速度設定などを無効化します。
+
+## 10. 検証記録
+
+PR #10 では次を確認しました。
+
+- 直線移動
+- 縦移動
+- Uターン・折り返し
+- 複数マス移動
+- GOAL到着
+- 1手戻す
+- 390px / 768px / 1440pxで横方向の画面はみ出しなし
+- JavaScript構文
+- 差分・JSON・素材参照・配布ZIPの整合性
+- ブラウザの警告・エラーなし
+- reduced motion のCSS・JavaScript経路
+
+OS側の reduced motion 設定を実際に切り替えた目視確認は、PR #10時点では未実施です。
+
+## 11. 今後変更する場合
+
+演出を拡張するときは、盤面ルートとキャラクター移動で別々の座標計算を作らず、`buildBoardRouteModel()` の同一ルートモデルを共有してください。
+
+攻撃素材や割り当てを追加する場合は、まず `assets/effects/manifest.json` を更新し、コード側へ同じ定義を重複して持たせない方針を維持します。
