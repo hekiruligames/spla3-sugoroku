@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>スプラすごろく</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=issue8" />
   </head>
   <body>
     <main class="app">
@@ -183,6 +183,25 @@
             </label>
             <p id="debugInfoHint" class="setting-hint">開発用情報をオンにすると、現在のマスの種類を表示します。</p>
           </div>
+
+          <fieldset class="character-settings">
+            <legend>キャラクター</legend>
+            <div class="display-options character-options">
+              <label><input type="radio" name="playerCharacter" value="slime" checked />スライム</label>
+              <label><input type="radio" name="playerCharacter" value="squid" />イカ型</label>
+              <label><input type="radio" name="playerCharacter" value="octopus" />タコ型</label>
+            </div>
+            <p class="setting-hint">正面を向いたまま移動し、選択したイカ色に染まります。</p>
+          </fieldset>
+
+          <fieldset class="animation-settings">
+            <legend>移動速度</legend>
+            <div class="display-options">
+              <label><input type="radio" name="animationSpeed" value="slow" />ゆっくり</label>
+              <label><input type="radio" name="animationSpeed" value="normal" checked />標準</label>
+              <label><input type="radio" name="animationSpeed" value="fast" />はやい</label>
+            </div>
+          </fieldset>
 
           <fieldset class="color-settings">
             <legend>イカ色</legend>

@@ -640,36 +640,199 @@ button.primary {
   position: absolute;
   top: 0;
   left: 0;
-  width: 22px;
-  height: 22px;
+  width: clamp(26px, calc(var(--route-cell-size) * 0.46), 56px);
+  height: clamp(26px, calc(var(--route-cell-size) * 0.46), 56px);
   z-index: 10;
-  transform: translate3d(var(--token-x, 0), var(--token-y, 0), 0);
-  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translate3d(var(--token-x, 0), var(--token-y, 0), 0)
+    scale(var(--token-scale, 1));
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform;
   pointer-events: none;
+  filter:
+    drop-shadow(1px 0 0 #111827)
+    drop-shadow(-1px 0 0 #111827)
+    drop-shadow(0 1px 0 #111827)
+    drop-shadow(0 -1px 0 #111827)
+    drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5));
+  --player-body-mask: var(--player-idle-body-mask);
+  --player-detail-dark: var(--player-idle-detail-dark, none);
+  --player-detail-light: var(--player-idle-detail-light, none);
 }
 
-.player-token::before {
-  content: "";
+.player-token-layer {
   position: absolute;
   inset: 0;
-  border-radius: 999px;
-  border: 2px solid #0b1120;
-  background: radial-gradient(circle at 35% 35%, #ffffff 0 18%, var(--squid-color) 20% 100%);
-  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.35));
-  animation: squid-swim 0.55s ease-in-out infinite alternate;
+  background-repeat: no-repeat;
+  background-size: 400% 100%;
+  animation: player-detail-idle 0.82s steps(3, end) infinite alternate;
+}
+
+.player-token-body {
+  background: var(--squid-color);
+  -webkit-mask-image: var(--player-body-mask);
+  mask-image: var(--player-body-mask);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 400% 100%;
+  mask-size: 400% 100%;
+  animation: player-mask-idle 0.82s steps(3, end) infinite alternate;
+}
+
+.player-token-detail-dark {
+  background-image: var(--player-detail-dark, none);
+}
+
+.player-token-detail-light {
+  background-image: var(--player-detail-light, none);
+}
+
+.player-token[data-character="slime"] {
+  width: clamp(30px, calc(var(--route-cell-size) * 0.51), 62px);
+  height: clamp(30px, calc(var(--route-cell-size) * 0.51), 62px);
+  --player-idle-body-mask: url("assets/player/slime-idle-body-mask.png");
+  --player-idle-detail-dark: url("assets/player/slime-idle-details.png");
+  --player-move-body-mask: url("assets/player/slime-move-body-mask.png");
+  --player-move-detail-dark: url("assets/player/slime-move-details.png");
+}
+
+.player-token[data-phase="windup"],
+.player-token[data-phase="attack"],
+.player-token[data-phase="paint"],
+.player-token[data-phase="move"] {
+  --token-scale: 1.28;
+}
+
+.player-token[data-phase="landing"] {
+  --token-scale: 1.18;
+}
+
+.player-token[data-character="squid"] {
+  --player-idle-body-mask: url("assets/player/squid-idle-body-mask.png");
+  --player-idle-detail-dark: url("assets/player/squid-idle-dark-details.png");
+  --player-idle-detail-light: url("assets/player/squid-idle-light-details.png");
+  --player-move-body-mask: url("assets/player/squid-move-body-mask.png");
+  --player-move-detail-dark: url("assets/player/squid-move-dark-details.png");
+  --player-move-detail-light: url("assets/player/squid-move-light-details.png");
+}
+
+.player-token[data-character="octopus"] {
+  --player-idle-body-mask: url("assets/player/octopus-idle-body-mask.png");
+  --player-idle-detail-dark: url("assets/player/octopus-idle-dark-details.png");
+  --player-idle-detail-light: url("assets/player/octopus-idle-light-details.png");
+  --player-move-body-mask: url("assets/player/octopus-move-body-mask.png");
+  --player-move-detail-dark: url("assets/player/octopus-move-dark-details.png");
+  --player-move-detail-light: url("assets/player/octopus-move-light-details.png");
+}
+
+.player-token[data-phase="move"] {
+  --player-body-mask: var(--player-move-body-mask);
+  --player-detail-dark: var(--player-move-detail-dark, none);
+  --player-detail-light: var(--player-move-detail-light, none);
+}
+
+.player-token[data-phase="move"] .player-token-layer {
+  background-size: 600% 100%;
+  animation-duration: 0.3s;
+  animation-timing-function: steps(5, end);
+}
+
+.player-token[data-phase="move"] .player-token-body {
+  -webkit-mask-size: 600% 100%;
+  mask-size: 600% 100%;
+  animation-timing-function: steps(5, end);
+}
+
+.player-token[data-phase="windup"] .player-token-layer {
+  transform: scaleX(1.12) scaleY(0.82) translateY(8%);
+}
+
+.player-token[data-phase="attack"] .player-token-layer {
+  transform: scaleX(0.9) scaleY(1.08) translateY(-4%);
 }
 
 .player-token.is-instant {
   transition: none;
 }
 
-@keyframes squid-swim {
+@keyframes player-mask-idle {
   from {
-    transform: translateY(0) rotate(-5deg);
+    -webkit-mask-position: 0% 0;
+    mask-position: 0% 0;
   }
   to {
-    transform: translateY(-2px) rotate(5deg);
+    -webkit-mask-position: 100% 0;
+    mask-position: 100% 0;
+  }
+}
+
+@keyframes player-detail-idle {
+  from {
+    background-position: 0% 0;
+  }
+  to {
+    background-position: 100% 0;
+  }
+}
+
+.route-effect {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: clamp(34px, calc(var(--route-cell-size) * 0.66), 76px);
+  height: clamp(34px, calc(var(--route-cell-size) * 0.66), 76px);
+  z-index: 9;
+  pointer-events: none;
+  background: var(--squid-color);
+  -webkit-mask-image: var(--effect-mask);
+  mask-image: var(--effect-mask);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 300% 100%;
+  mask-size: 300% 100%;
+  transform: translate3d(var(--effect-x, 0), var(--effect-y, 0), 0)
+    rotate(var(--effect-angle, 0deg)) scale(var(--effect-scale, 1));
+  transform-origin: center;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.45));
+  animation: route-effect-frames 0.32s steps(2, end) infinite;
+  will-change: transform, opacity;
+}
+
+.route-effect-tail {
+  z-index: 8;
+  opacity: 0.78;
+}
+
+.route-effect-attack {
+  width: clamp(44px, calc(var(--route-cell-size) * 0.9), 104px);
+  height: clamp(44px, calc(var(--route-cell-size) * 0.9), 104px);
+  filter:
+    drop-shadow(1px 0 0 #111827)
+    drop-shadow(-1px 0 0 #111827)
+    drop-shadow(0 1px 0 #111827)
+    drop-shadow(0 -1px 0 #111827)
+    drop-shadow(0 2px 2px rgba(0, 0, 0, 0.45));
+}
+
+.route-effect-ricochet {
+  z-index: 10;
+  width: clamp(40px, calc(var(--route-cell-size) * 0.76), 88px);
+  height: clamp(40px, calc(var(--route-cell-size) * 0.76), 88px);
+}
+
+.route-effect-landing {
+  z-index: 11;
+  width: clamp(44px, calc(var(--route-cell-size) * 0.9), 104px);
+  height: clamp(44px, calc(var(--route-cell-size) * 0.9), 104px);
+}
+
+@keyframes route-effect-frames {
+  from {
+    -webkit-mask-position: 0% 0;
+    mask-position: 0% 0;
+  }
+  to {
+    -webkit-mask-position: 100% 0;
+    mask-position: 100% 0;
   }
 }
 
@@ -683,7 +846,9 @@ button.primary {
     transition: none;
   }
 
-  .player-token::before {
+  .player-token-layer,
+  .player-token-body,
+  .route-effect {
     animation: none;
   }
 }
@@ -1164,13 +1329,12 @@ body.row-mode .board.horizontal .cell {
   }
 
   .player-token {
-    width: 20px;
-    height: 20px;
+    width: clamp(30px, calc(var(--route-cell-size) * 0.42), 48px);
+    height: clamp(30px, calc(var(--route-cell-size) * 0.42), 48px);
     transition-duration: 140ms;
   }
 
-  .player-token::before {
-    filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.3));
+  .player-token-layer {
     animation-duration: 0.7s;
   }
 }
@@ -1573,10 +1737,6 @@ body.row-mode .board-viewport {
 .board.overview-map .player-token {
   width: clamp(7px, calc(var(--overview-cell-size) * 0.36), 18px);
   height: clamp(7px, calc(var(--overview-cell-size) * 0.36), 18px);
-}
-
-.board.overview-map .player-token::before {
-  border-width: 1px;
 }
 
 @media (min-width: 1000px) and (max-height: 400px) {

@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "baseDirection": "right",
+  "tintMode": "alpha-mask",
+  "frame": {
+    "width": 724,
+    "height": 724,
+    "count": 3
+  },
+  "effects": {
+    "shot": {
+      "source": "assets/effects/shot-mask-strip-v1.png",
+      "preview": "assets/effects/previews/shot-preview.webp",
+      "durationsMs": [90, 110, 180],
+      "role": "attack"
+    },
+    "beam": {
+      "source": "assets/effects/beam-cap-mask-strip-v1.png",
+      "preview": "assets/effects/previews/beam-cap-preview.webp",
+      "durationsMs": [90, 110, 180],
+      "role": "attack-cap"
+    },
+    "wave": {
+      "source": "assets/effects/wave-mask-strip-v1.png",
+      "preview": "assets/effects/previews/wave-preview.webp",
+      "durationsMs": [90, 110, 180],
+      "role": "attack"
+    },
+    "bomb": {
+      "source": "assets/effects/bomb-mask-strip-v1.png",
+      "preview": "assets/effects/previews/bomb-preview.webp",
+      "durationsMs": [90, 110, 180],
+      "role": "attack"
+    },
+    "burst": {
+      "source": "assets/effects/burst-mask-strip-v1.png",
+      "preview": "assets/effects/previews/burst-preview.webp",
+      "durationsMs": [90, 110, 180],
+      "role": "attack-cap"
+    },
+    "ricochet": {
+      "source": "assets/effects/ricochet-mask-strip-v1.png",
+      "preview": "assets/effects/previews/ricochet-preview.webp",
+      "durationsMs": [90, 110, 180],
+      "role": "route-corner"
+    },
+    "moveTail": {
+      "source": "assets/effects/move-tail-mask-strip-v1.png",
+      "preview": "assets/effects/previews/move-tail-preview.webp",
+      "durationsMs": [90, 110, 180],
+      "role": "movement"
+    },
+    "landingSplash": {
+      "source": "assets/effects/landing-splash-mask-strip-v2.png",
+      "preview": "assets/effects/previews/landing-splash-preview.webp",
+      "durationsMs": [90, 130, 220],
+      "role": "landing"
+    }
+  },
+  "attackMapping": {
+    "start": "shot",
+    "mainCategories": {
+      "shooter": "shot",
+      "maneuver": "shot",
+      "blaster": "shot",
+      "charger": "beam",
+      "spinner": "beam",
+      "stringer": "beam",
+      "roller": "wave",
+      "brush": "wave",
+      "wiper": "wave",
+      "slosher": "bomb",
+      "shelter": "burst"
+    },
+    "sub": "bomb",
+    "special": "burst",
+    "goal": null
+  }
+}
