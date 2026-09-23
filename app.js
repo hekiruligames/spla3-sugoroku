@@ -3,7 +3,7 @@ const STORAGE_KEY = "splatoon3_sugoroku_prefs";
 const RAW_MANIFEST_PATH = "data/raw-manifest.json";
 const SUB_IMAGE_MAP_PATH = "data/sub-image-map.json";
 const SPECIAL_IMAGE_MAP_PATH = "data/special-image-map.json";
-const MOVE_STEP_MS = 160;
+const EFFECT_MANIFEST_PATH = "assets/effects/manifest.json";
 const UNDO_STEP_MS = 60;
 const TOKEN_EDGE_OFFSET = 2;
 const CELL_BASE_SIZE = 96;
@@ -20,6 +20,10 @@ const ROUTE_OUTER_MARGIN_RATIO = 0.55;
 const ROUTE_EDGE_PADDING_RATIO = 0.08;
 const ROUTE_OUTLINE_HALF_RATIO = ROUTE_WIDTH_RATIO * 1.34 / 2;
 const SVG_NS = "http://www.w3.org/2000/svg";
+const MOVE_PHASE_MS = 240;
+const ATTACK_PHASE_MS = 230;
+const LANDING_PHASE_MS = 180;
+const WINDUP_PHASE_MS = 110;
 
 const DISPLAY_PRESETS = {
   row: {
@@ -260,6 +264,8 @@ const SPECIAL_WEAPONS = [
 
 const gameState = {
   position: 0,
+  paintedUntilPosition: 0,
+  animationPhase: "idle",
   inputMode: "dice",
   isAnimating: false,
   cells: [],
@@ -273,6 +279,8 @@ const viewState = {
   overviewMode: false,
   followCurrent: true,
   squidColor: "#22d3ee",
+  playerCharacter: "slime",
+  animationSpeed: "normal",
   debugInfo: false
 };
 
@@ -292,6 +300,8 @@ const followCurrent = document.getElementById("followCurrent");
 const squidColorInput = document.getElementById("squidColor");
 const inputModes = [...document.querySelectorAll('input[name="inputMode"]')];
 const colorPresets = [...document.querySelectorAll('input[name="squidColorPreset"]')];
+const playerCharacters = [...document.querySelectorAll('input[name="playerCharacter"]')];
+const animationSpeeds = [...document.querySelectorAll('input[name="animationSpeed"]')];
 const debugInfoInput = document.getElementById("debugInfo");
 const debugInfoLine = document.getElementById("debugInfoLine");
 const settingsDialog = document.getElementById("settingsDialog");
@@ -321,12 +331,15 @@ const goalRegenBtn = document.getElementById("goalRegenBtn");
 const goalCloseBtn = document.getElementById("goalCloseBtn");
 const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 let playerToken = null;
+let boardRouteModel = null;
 
 const imageMaps = {
   weaponByName: new Map(),
+  weaponCategoryByName: new Map(),
   subByName: {},
   specialByName: {}
 };
+let effectManifest = null;
 
 function toWeaponImagePath(item) {
   return `assets/weapons/${String(item.globalOrder).padStart(3, "0")}-${item.category}-${String(item.categoryOrder).padStart(2, "0")}.png`;
@@ -342,17 +355,25 @@ async function fetchJson(path) {
 
 async function loadImageMaps() {
   try {
-    const [manifest, subMap, specialMap] = await Promise.all([
+    const [manifest, subMap, specialMap, loadedEffectManifest] = await Promise.all([
       fetchJson(RAW_MANIFEST_PATH),
       fetchJson(SUB_IMAGE_MAP_PATH),
-      fetchJson(SPECIAL_IMAGE_MAP_PATH)
+      fetchJson(SPECIAL_IMAGE_MAP_PATH),
+      fetchJson(EFFECT_MANIFEST_PATH).catch((error) => {
+        console.warn("演出素材の読み込みに失敗しました。演出なしで続行します。", error);
+        return null;
+      })
     ]);
 
     imageMaps.weaponByName = new Map(
       manifest.items.map((item) => [item.weaponNameJa, toWeaponImagePath(item)])
     );
+    imageMaps.weaponCategoryByName = new Map(
+      manifest.items.map((item) => [item.weaponNameJa, item.category])
+    );
     imageMaps.subByName = subMap;
     imageMaps.specialByName = specialMap;
+    effectManifest = loadedEffectManifest;
     renderBoard({ smoothFollow: false });
   } catch (error) {
     console.warn("画像対応表の読み込みに失敗しました。", error);
@@ -404,6 +425,8 @@ function savePrefs() {
       wrapDirection: viewState.wrapDirection,
       cellScale: viewState.cellScale,
       squidColor: viewState.squidColor,
+      playerCharacter: viewState.playerCharacter,
+      animationSpeed: viewState.animationSpeed,
       followCurrent: viewState.followCurrent,
       debugInfo: viewState.debugInfo
     };
@@ -462,6 +485,12 @@ function applyPrefs() {
   }
   if (typeof prefs.followCurrent === "boolean") {
     viewState.followCurrent = prefs.followCurrent;
+  }
+  if (["slime", "squid", "octopus"].includes(prefs.playerCharacter)) {
+    viewState.playerCharacter = prefs.playerCharacter;
+  }
+  if (["slow", "normal", "fast"].includes(prefs.animationSpeed)) {
+    viewState.animationSpeed = prefs.animationSpeed;
   }
   viewState.debugInfo = prefs.debugInfo === true;
   syncPresetSelection();
@@ -614,6 +643,8 @@ function setControlsDisabled(disabled) {
     squidColorInput,
     ...inputModes,
     ...colorPresets,
+    ...playerCharacters,
+    ...animationSpeeds,
     manualStepInput,
     rollBtn,
     manualMoveBtn,
@@ -946,6 +977,279 @@ function getSegmentPointAndTangent(segment, t = 0.5) {
   return { point, tangent };
 }
 
+function measureRouteSegment(segment, sampleCount = 24) {
+  const distanceTable = [{ t: 0, distance: 0 }];
+  let previousPoint = getSegmentPointAndTangent(segment, 0).point;
+  let length = 0;
+
+  for (let sample = 1; sample <= sampleCount; sample += 1) {
+    const t = sample / sampleCount;
+    const point = getSegmentPointAndTangent(segment, t).point;
+    length += Math.hypot(point.x - previousPoint.x, point.y - previousPoint.y);
+    distanceTable.push({ t, distance: length });
+    previousPoint = point;
+  }
+
+  return { length, distanceTable };
+}
+
+function getSegmentPointAtProgress(segment, progress = 0) {
+  const clampedProgress = Math.min(1, Math.max(0, progress));
+  if (!segment.length || !segment.distanceTable?.length) {
+    return getSegmentPointAndTangent(segment, clampedProgress);
+  }
+
+  const targetDistance = segment.length * clampedProgress;
+  let upperIndex = segment.distanceTable.findIndex(
+    (sample) => sample.distance >= targetDistance
+  );
+  if (upperIndex <= 0) {
+    upperIndex = 1;
+  }
+
+  const lower = segment.distanceTable[upperIndex - 1];
+  const upper = segment.distanceTable[upperIndex];
+  const span = upper.distance - lower.distance;
+  const localProgress = span > 0 ? (targetDistance - lower.distance) / span : 0;
+  const t = lower.t + (upper.t - lower.t) * localProgress;
+  return getSegmentPointAndTangent(segment, t);
+}
+
+function buildBoardRouteModel(options = {}) {
+  const cells = [...board.querySelectorAll(":scope > .cell")]
+    .sort((a, b) => Number(a.dataset.index) - Number(b.dataset.index));
+  if (cells.length < 2) {
+    return null;
+  }
+
+  const width = board.clientWidth;
+  const height = board.clientHeight;
+  if (width <= 0 || height <= 0) {
+    return null;
+  }
+
+  const cellSize = options.cellSize ?? cells[0].offsetWidth;
+  const horizontalTravel = options.horizontalTravel
+    ?? (viewState.overviewMode || ["right", "left"].includes(viewState.direction));
+  const outerMargin = options.outerMargin ?? cellSize * ROUTE_OUTER_MARGIN_RATIO;
+  const centers = cells.map((cell) => ({
+    x: cell.offsetLeft + cell.offsetWidth / 2,
+    y: cell.offsetTop + cell.offsetHeight / 2
+  }));
+  const segments = [];
+
+  for (let index = 0; index < centers.length - 1; index += 1) {
+    const segment = createRouteSegment(
+      centers[index],
+      centers[index + 1],
+      centers[index - 1],
+      { cellSize, horizontalTravel, outerMargin }
+    );
+    const measurement = measureRouteSegment(segment);
+    segments.push({
+      ...segment,
+      ...measurement,
+      index,
+      from: centers[index],
+      to: centers[index + 1]
+    });
+  }
+
+  return {
+    width,
+    height,
+    cellSize,
+    horizontalTravel,
+    outerMargin,
+    cells,
+    centers,
+    segments
+  };
+}
+
+function getAttackTypeForCell(cellData) {
+  const mapping = effectManifest?.attackMapping;
+  if (!mapping || !cellData) {
+    return "shot";
+  }
+  if (cellData.kind === "main") {
+    const category = imageMaps.weaponCategoryByName.get(cellData.weapon);
+    return mapping.mainCategories?.[category] ?? "shot";
+  }
+  return mapping[cellData.kind] ?? "shot";
+}
+
+function getEffectSource(effectName) {
+  return effectManifest?.effects?.[effectName]?.source ?? "";
+}
+
+function setAnimationPhase(phase) {
+  gameState.animationPhase = phase;
+  const token = ensurePlayerToken();
+  token.dataset.phase = phase;
+}
+
+function getAnimationDuration(duration) {
+  const multiplier = { slow: 1.25, normal: 1, fast: 0.68 }[viewState.animationSpeed] ?? 1;
+  return duration * multiplier;
+}
+
+function easeInCubic(value) {
+  return value ** 3;
+}
+
+function easeInOutCubic(value) {
+  return value < 0.5
+    ? 4 * value ** 3
+    : 1 - ((-2 * value + 2) ** 3) / 2;
+}
+
+function easeOutCubic(value) {
+  return 1 - (1 - value) ** 3;
+}
+
+function animateProgress(duration, onFrame, easing = (value) => value) {
+  if (reducedMotionQuery.matches || duration <= 0) {
+    onFrame(1);
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve) => {
+    const startTime = performance.now();
+    const tick = (time) => {
+      const progress = Math.min(1, (time - startTime) / duration);
+      onFrame(easing(progress));
+      if (progress < 1) {
+        window.requestAnimationFrame(tick);
+      } else {
+        resolve();
+      }
+    };
+    window.requestAnimationFrame(tick);
+  });
+}
+
+function positionRouteEffect(effect, segment, progress, { followTangent = true } = {}) {
+  const { point, tangent } = getSegmentPointAtProgress(segment, progress);
+  const size = effect.offsetWidth || Math.max(32, boardRouteModel?.cellSize * 0.64 || 48);
+  const angle = followTangent ? Math.atan2(tangent.y, tangent.x) * 180 / Math.PI : 0;
+  effect.style.setProperty("--effect-x", `${point.x - size / 2}px`);
+  effect.style.setProperty("--effect-y", `${point.y - size / 2}px`);
+  effect.style.setProperty("--effect-angle", `${angle}deg`);
+}
+
+function createRouteEffect(effectName, className = "") {
+  const source = getEffectSource(effectName);
+  if (!source) {
+    return null;
+  }
+  const effect = document.createElement("div");
+  effect.className = `route-effect ${className}`.trim();
+  effect.dataset.effect = effectName;
+  effect.style.setProperty("--effect-mask", `url("${source}")`);
+  effect.setAttribute("aria-hidden", "true");
+  board.appendChild(effect);
+  return effect;
+}
+
+async function animateAttackOnSegment(segment, attackType) {
+  const effect = createRouteEffect(attackType, "route-effect-attack");
+  const ricochet = segment.folded
+    ? createRouteEffect("ricochet", "route-effect-ricochet")
+    : null;
+  if (!effect) {
+    await wait(reducedMotionQuery.matches ? 0 : getAnimationDuration(ATTACK_PHASE_MS));
+    ricochet?.remove();
+    return;
+  }
+  if (ricochet) {
+    positionRouteEffect(ricochet, segment, 0.5);
+    ricochet.style.opacity = "0";
+  }
+  await animateProgress(getAnimationDuration(ATTACK_PHASE_MS), (progress) => {
+    positionRouteEffect(effect, segment, progress);
+    if (ricochet) {
+      const strength = Math.max(0, 1 - Math.abs(progress - 0.5) * 4);
+      ricochet.style.opacity = String(strength);
+      ricochet.style.setProperty("--effect-scale", String(0.7 + strength * 0.45));
+    }
+  }, easeInCubic);
+  effect.remove();
+  ricochet?.remove();
+}
+
+function positionPlayerTokenOnSegment(segment, progress) {
+  const token = ensurePlayerToken();
+  const { point } = getSegmentPointAtProgress(segment, progress);
+  const tokenWidth = token.offsetWidth || 40;
+  const tokenHeight = token.offsetHeight || tokenWidth;
+  const x = point.x - tokenWidth / 2;
+  const y = point.y - tokenHeight / 2;
+  token.style.setProperty("--token-x", `${Math.max(0, x)}px`);
+  token.style.setProperty("--token-y", `${Math.max(0, y)}px`);
+}
+
+async function animatePlayerOnSegment(segment) {
+  const tail = createRouteEffect("moveTail", "route-effect-tail");
+  await animateProgress(getAnimationDuration(MOVE_PHASE_MS), (progress) => {
+    positionPlayerTokenOnSegment(segment, progress);
+    if (tail) {
+      positionRouteEffect(tail, segment, Math.max(0, progress - 0.08));
+    }
+  }, easeInOutCubic);
+  tail?.remove();
+}
+
+async function animateLandingAtSegmentEnd(segment) {
+  const splash = createRouteEffect("landingSplash", "route-effect-landing");
+  if (!splash) {
+    await wait(reducedMotionQuery.matches ? 0 : getAnimationDuration(LANDING_PHASE_MS));
+    return;
+  }
+  positionRouteEffect(splash, segment, 1, { followTangent: false });
+  await animateProgress(getAnimationDuration(LANDING_PHASE_MS), (progress) => {
+    splash.style.setProperty("--effect-scale", String(0.65 + progress * 0.55));
+    splash.style.opacity = String(1 - Math.max(0, progress - 0.55) / 0.45);
+  }, easeOutCubic);
+  splash.remove();
+}
+
+async function animateStepToNextCell(attackType) {
+  const segment = boardRouteModel?.segments[gameState.position];
+  if (!segment) {
+    return false;
+  }
+
+  setAnimationPhase("windup");
+  positionPlayerTokenOnSegment(segment, 0);
+  await wait(reducedMotionQuery.matches ? 0 : getAnimationDuration(WINDUP_PHASE_MS));
+
+  setAnimationPhase("attack");
+  await animateAttackOnSegment(segment, attackType);
+
+  setAnimationPhase("paint");
+  gameState.paintedUntilPosition = gameState.position + 1;
+  renderBoardRoute();
+  await wait(reducedMotionQuery.matches ? 0 : getAnimationDuration(50));
+
+  setAnimationPhase("move");
+  await animatePlayerOnSegment(segment);
+
+  const previousPosition = gameState.position;
+  gameState.position += 1;
+  updatePositionView(previousPosition, {
+    animateToken: false,
+    smoothFollow: false,
+    keepTokenPosition: true
+  });
+
+  setAnimationPhase("landing");
+  await animateLandingAtSegmentEnd(segment);
+  setAnimationPhase("idle");
+  positionPlayerToken(true);
+  return true;
+}
+
 function createInkSplatPath(cell, index) {
   const x = cell.offsetLeft;
   const y = cell.offsetTop;
@@ -1004,35 +1308,11 @@ function createRouteArrow(segment, cellSize, className) {
 
 function renderBoardRoute(options = {}) {
   board.querySelector(":scope > .board-route")?.remove();
-  const cells = [...board.querySelectorAll(":scope > .cell")]
-    .sort((a, b) => Number(a.dataset.index) - Number(b.dataset.index));
-  if (cells.length < 2) {
+  boardRouteModel = buildBoardRouteModel(options);
+  if (!boardRouteModel) {
     return;
   }
-
-  const width = board.clientWidth;
-  const height = board.clientHeight;
-  if (width <= 0 || height <= 0) {
-    return;
-  }
-
-  const cellSize = options.cellSize ?? cells[0].offsetWidth;
-  const horizontalTravel = options.horizontalTravel
-    ?? (viewState.overviewMode || ["right", "left"].includes(viewState.direction));
-  const outerMargin = options.outerMargin ?? cellSize * ROUTE_OUTER_MARGIN_RATIO;
-  const centers = cells.map((cell) => ({
-    x: cell.offsetLeft + cell.offsetWidth / 2,
-    y: cell.offsetTop + cell.offsetHeight / 2
-  }));
-  const segments = [];
-  for (let index = 0; index < centers.length - 1; index += 1) {
-    segments.push(createRouteSegment(
-      centers[index],
-      centers[index + 1],
-      centers[index - 1],
-      { cellSize, horizontalTravel, outerMargin }
-    ));
-  }
+  const { cells, width, height, cellSize, segments } = boardRouteModel;
 
   const svg = createSvgElement("svg", {
     class: "board-route",
@@ -1050,9 +1330,10 @@ function renderBoardRoute(options = {}) {
     svg.appendChild(createSvgElement("path", { class: className, d }));
   });
 
-  if (gameState.position > 0) {
+  const paintedPosition = gameState.paintedUntilPosition ?? gameState.position;
+  if (paintedPosition > 0) {
     const paintedRoute = segments
-      .slice(0, gameState.position)
+      .slice(0, paintedPosition)
       .map((segment) => segment.d)
       .join(" ");
     svg.appendChild(createSvgElement("path", {
@@ -1062,7 +1343,7 @@ function renderBoardRoute(options = {}) {
   }
 
   const visitedGroup = createSvgElement("g", { class: "route-visited-cells" });
-  cells.slice(0, gameState.position).forEach((cell, index) => {
+  cells.slice(0, paintedPosition).forEach((cell, index) => {
     visitedGroup.appendChild(createSvgElement("path", {
       class: "route-ink-splat",
       d: createInkSplatPath(cell, index)
@@ -1180,7 +1461,13 @@ function ensurePlayerToken() {
 
   playerToken = document.createElement("div");
   playerToken.className = "player-token is-instant";
+  playerToken.dataset.character = viewState.playerCharacter;
   playerToken.setAttribute("aria-hidden", "true");
+  playerToken.innerHTML = `
+    <span class="player-token-layer player-token-body"></span>
+    <span class="player-token-layer player-token-detail player-token-detail-dark"></span>
+    <span class="player-token-layer player-token-detail player-token-detail-light"></span>
+  `;
   board.appendChild(playerToken);
   return playerToken;
 }
@@ -1219,7 +1506,9 @@ function updateCurrentCell(prevPosition, nextPosition) {
 function updatePositionView(prevPosition, options = { animateToken: false, smoothFollow: false }) {
   updateCurrentCell(prevPosition, gameState.position);
   updateStatus();
-  positionPlayerToken(options.animateToken);
+  if (!options.keepTokenPosition) {
+    positionPlayerToken(options.animateToken);
+  }
   updateReturnCurrentButton();
 
   if (shouldFollowCurrent()) {
@@ -1374,6 +1663,7 @@ async function undoLastMove() {
   while (gameState.position > target) {
     const prevPosition = gameState.position;
     gameState.position -= 1;
+    gameState.paintedUntilPosition = gameState.position;
     updatePositionView(prevPosition, { animateToken: true, smoothFollow });
     await wait(stepDelay);
   }
@@ -1395,6 +1685,8 @@ function resetGame() {
   closeMoreActions();
   clearHistory();
   gameState.position = 0;
+  gameState.paintedUntilPosition = 0;
+  gameState.animationPhase = "idle";
   diceResult.textContent = "出目: -";
   renderBoard({ smoothFollow: false });
 }
@@ -1405,6 +1697,8 @@ function regenerateGame() {
   clearHistory();
   buildCells();
   gameState.position = 0;
+  gameState.paintedUntilPosition = 0;
+  gameState.animationPhase = "idle";
   diceResult.textContent = "出目: -";
   renderBoard({ smoothFollow: false });
 }
@@ -1444,15 +1738,18 @@ async function move(step, options = {}) {
   const isCompactViewport = window.matchMedia("(max-width: 640px)").matches;
   const cols = getDisplayCols();
   const smoothFollow = isRowMode() || cols === 1 || (!isWideTwoPane && !isCompactViewport);
-  const stepDelay = reducedMotionQuery.matches ? 60 : MOVE_STEP_MS;
-
+  const moveAttackType = getAttackTypeForCell(gameState.cells[gameState.position]);
   while (gameState.position < target) {
-    const prevPosition = gameState.position;
-    gameState.position += 1;
-    updatePositionView(prevPosition, { animateToken: true, smoothFollow });
-    await wait(stepDelay);
+    const moved = await animateStepToNextCell(moveAttackType);
+    if (!moved) {
+      break;
+    }
+    if (shouldFollowCurrent()) {
+      scrollToCurrent(smoothFollow);
+    }
   }
 
+  setAnimationPhase("idle");
   gameState.isAnimating = false;
   setControlsDisabled(false);
 
@@ -1670,6 +1967,24 @@ colorPresets.forEach((radio) => {
   });
 });
 
+playerCharacters.forEach((radio) => {
+  radio.addEventListener("change", () => {
+    viewState.playerCharacter = radio.value;
+    playerCharacters.forEach((choice) => {
+      choice.checked = choice.value === viewState.playerCharacter;
+    });
+    ensurePlayerToken().dataset.character = viewState.playerCharacter;
+    savePrefs();
+  });
+});
+
+animationSpeeds.forEach((radio) => {
+  radio.addEventListener("change", () => {
+    viewState.animationSpeed = radio.value;
+    savePrefs();
+  });
+});
+
 debugInfoInput.addEventListener("change", () => {
   viewState.debugInfo = debugInfoInput.checked;
   updateStatus();
@@ -1748,6 +2063,12 @@ savePrefs();
 followCurrent.checked = viewState.followCurrent;
 debugInfoInput.checked = viewState.debugInfo;
 squidColorInput.value = viewState.squidColor;
+playerCharacters.forEach((radio) => {
+  radio.checked = radio.value === viewState.playerCharacter;
+});
+animationSpeeds.forEach((radio) => {
+  radio.checked = radio.value === viewState.animationSpeed;
+});
 applyTheme();
 updateCustomControls();
 updateUndoButton();
