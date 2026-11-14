@@ -20,10 +20,11 @@ const ROUTE_OUTER_MARGIN_RATIO = 0.55;
 const ROUTE_EDGE_PADDING_RATIO = 0.08;
 const ROUTE_OUTLINE_HALF_RATIO = ROUTE_WIDTH_RATIO * 1.34 / 2;
 const SVG_NS = "http://www.w3.org/2000/svg";
-const MOVE_PHASE_MS = 240;
-const ATTACK_PHASE_MS = 230;
-const LANDING_PHASE_MS = 180;
-const WINDUP_PHASE_MS = 110;
+const MOVE_PHASE_MS = 480;
+const ATTACK_PHASE_MS = 300;
+const LANDING_PHASE_MS = 280;
+const WINDUP_PHASE_MS = 160;
+const REDUCED_MOTION_STEP_MS = 600;
 
 const DISPLAY_PRESETS = {
   row: {
@@ -1218,6 +1219,17 @@ async function animateStepToNextCell(attackType) {
   const segment = boardRouteModel?.segments[gameState.position];
   if (!segment) {
     return false;
+  }
+
+  // Reduced motion keeps discrete, readable steps without moving effects.
+  // Skipping every phase here used to finish the entire turn before a repaint.
+  if (reducedMotionQuery.matches) {
+    await wait(getAnimationDuration(REDUCED_MOTION_STEP_MS));
+    const previousPosition = gameState.position;
+    gameState.position += 1;
+    gameState.paintedUntilPosition = gameState.position;
+    updatePositionView(previousPosition, { animateToken: false, smoothFollow: false });
+    return true;
   }
 
   setAnimationPhase("windup");

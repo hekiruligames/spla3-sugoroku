@@ -750,6 +750,8 @@ button.primary {
   transform: scaleX(0.9) scaleY(1.08) translateY(-4%);
 }
 
+/* Route movement already interpolates coordinates on each animation frame. */
+.player-token:not([data-phase="idle"]),
 .player-token.is-instant {
   transition: none;
 }
@@ -920,13 +922,14 @@ button.primary {
 }
 
 #manualBox {
-  flex: 1 1 150px;
-  max-width: 340px;
+  flex: 0 0 64px;
+  width: 64px;
+  max-width: 64px;
 }
 
 #manualStepInput {
   width: 100%;
-  min-width: 100px;
+  min-width: 0;
 }
 
 .move-actions {
@@ -1104,7 +1107,7 @@ body.view-layout-horizontal.row-mode .app {
   padding: 6px;
   margin: 0;
   gap: 4px 6px;
-  grid-template-columns: clamp(76px, 8vw, 110px) clamp(390px, 32vw, 470px) minmax(0, 1fr);
+  grid-template-columns: clamp(76px, 8vw, 110px) clamp(310px, 26vw, 350px) minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr);
   grid-template-areas: "header controls board";
   align-content: stretch;
@@ -1553,7 +1556,7 @@ body.view-layout-horizontal.row-mode .app {
   max-width: none;
   min-height: 180px;
   height: max(180px, 100dvh);
-  grid-template-columns: clamp(76px, 8vw, 110px) clamp(390px, 32vw, 470px) minmax(0, 1fr);
+  grid-template-columns: clamp(76px, 8vw, 110px) clamp(310px, 26vw, 350px) minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr);
   grid-template-areas: "header controls board";
 }
@@ -1567,7 +1570,7 @@ body.view-layout-horizontal.row-mode .board-viewport {
 }
 
 body.view-layout-horizontal.row-mode.panel-right .app {
-  grid-template-columns: minmax(0, 1fr) clamp(390px, 32vw, 470px) clamp(76px, 8vw, 110px);
+  grid-template-columns: minmax(0, 1fr) clamp(310px, 26vw, 350px) clamp(76px, 8vw, 110px);
   grid-template-areas: "board controls header";
 }
 
@@ -1624,14 +1627,14 @@ body.view-layout-vertical .site-footer {
 @media (max-width: 640px) {
   body.view-layout-horizontal.row-mode .app,
   body.view-layout-horizontal.row-mode.panel-right .app {
-    min-width: 760px;
-    grid-template-columns: 76px minmax(390px, 470px) minmax(280px, 1fr);
+    min-width: 680px;
+    grid-template-columns: 76px minmax(310px, 350px) minmax(280px, 1fr);
     grid-template-rows: minmax(180px, 100dvh);
     grid-template-areas: "header controls board";
   }
 
   body.view-layout-horizontal.row-mode.panel-right .app {
-    grid-template-columns: minmax(280px, 1fr) minmax(390px, 470px) 76px;
+    grid-template-columns: minmax(280px, 1fr) minmax(310px, 350px) 76px;
     grid-template-areas: "board controls header";
   }
 
