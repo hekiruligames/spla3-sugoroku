@@ -21,7 +21,7 @@ const ROUTE_EDGE_PADDING_RATIO = 0.08;
 const ROUTE_OUTLINE_HALF_RATIO = ROUTE_WIDTH_RATIO * 1.34 / 2;
 const SVG_NS = "http://www.w3.org/2000/svg";
 const MOVE_PHASE_MS = 480;
-const ATTACK_PHASE_MS = 300;
+const ATTACK_PHASE_MS = 650;
 const LANDING_PHASE_MS = 280;
 const WINDUP_PHASE_MS = 160;
 const REDUCED_MOTION_STEP_MS = 600;
@@ -282,6 +282,7 @@ const viewState = {
   squidColor: "#22d3ee",
   playerCharacter: "slime",
   animationSpeed: "normal",
+  showAnimations: false,
   debugInfo: false
 };
 
@@ -302,6 +303,7 @@ const squidColorInput = document.getElementById("squidColor");
 const inputModes = [...document.querySelectorAll('input[name="inputMode"]')];
 const colorPresets = [...document.querySelectorAll('input[name="squidColorPreset"]')];
 const playerCharacters = [...document.querySelectorAll('input[name="playerCharacter"]')];
+const showAnimationsInput = document.getElementById("showAnimations");
 const animationSpeeds = [...document.querySelectorAll('input[name="animationSpeed"]')];
 const debugInfoInput = document.getElementById("debugInfo");
 const debugInfoLine = document.getElementById("debugInfoLine");
@@ -428,6 +430,7 @@ function savePrefs() {
       squidColor: viewState.squidColor,
       playerCharacter: viewState.playerCharacter,
       animationSpeed: viewState.animationSpeed,
+      showAnimations: viewState.showAnimations,
       followCurrent: viewState.followCurrent,
       debugInfo: viewState.debugInfo
     };
@@ -493,6 +496,7 @@ function applyPrefs() {
   if (["slow", "normal", "fast"].includes(prefs.animationSpeed)) {
     viewState.animationSpeed = prefs.animationSpeed;
   }
+  viewState.showAnimations = prefs.showAnimations === true;
   viewState.debugInfo = prefs.debugInfo === true;
   syncPresetSelection();
 }
@@ -646,6 +650,7 @@ function setControlsDisabled(disabled) {
     ...colorPresets,
     ...playerCharacters,
     ...animationSpeeds,
+    showAnimationsInput,
     manualStepInput,
     rollBtn,
     manualMoveBtn,
@@ -791,7 +796,7 @@ function isWideTwoPaneLayout() {
 }
 
 function scrollToCurrent(smooth, options = {}) {
-  smooth = smooth && !reducedMotionQuery.matches;
+  smooth = smooth && !shouldReduceMotion();
   const currentCell = board.querySelector(`[data-index="${gameState.position}"]`);
   if (!currentCell) {
     return;
@@ -1090,6 +1095,15 @@ function setAnimationPhase(phase) {
   token.dataset.phase = phase;
 }
 
+function shouldReduceMotion() {
+  return reducedMotionQuery.matches && !viewState.showAnimations;
+}
+
+function syncAnimationPreference() {
+  showAnimationsInput.checked = viewState.showAnimations;
+  document.body.classList.toggle("show-animations", viewState.showAnimations);
+}
+
 function getAnimationDuration(duration) {
   const multiplier = { slow: 1.25, normal: 1, fast: 0.68 }[viewState.animationSpeed] ?? 1;
   return duration * multiplier;
@@ -1110,7 +1124,7 @@ function easeOutCubic(value) {
 }
 
 function animateProgress(duration, onFrame, easing = (value) => value) {
-  if (reducedMotionQuery.matches || duration <= 0) {
+  if (shouldReduceMotion() || duration <= 0) {
     onFrame(1);
     return Promise.resolve();
   }
@@ -1159,7 +1173,7 @@ async function animateAttackOnSegment(segment, attackType) {
     ? createRouteEffect("ricochet", "route-effect-ricochet")
     : null;
   if (!effect) {
-    await wait(reducedMotionQuery.matches ? 0 : getAnimationDuration(ATTACK_PHASE_MS));
+    await wait(shouldReduceMotion() ? 0 : getAnimationDuration(ATTACK_PHASE_MS));
     ricochet?.remove();
     return;
   }
@@ -1167,14 +1181,16 @@ async function animateAttackOnSegment(segment, attackType) {
     positionRouteEffect(ricochet, segment, 0.5);
     ricochet.style.opacity = "0";
   }
+  positionRouteEffect(effect, segment, 0.2);
+  await wait(getAnimationDuration(400));
   await animateProgress(getAnimationDuration(ATTACK_PHASE_MS), (progress) => {
-    positionRouteEffect(effect, segment, progress);
+    positionRouteEffect(effect, segment, 0.2 + progress * 0.8);
     if (ricochet) {
       const strength = Math.max(0, 1 - Math.abs(progress - 0.5) * 4);
       ricochet.style.opacity = String(strength);
       ricochet.style.setProperty("--effect-scale", String(0.7 + strength * 0.45));
     }
-  }, easeInCubic);
+  }, easeInOutCubic);
   effect.remove();
   ricochet?.remove();
 }
@@ -1204,7 +1220,7 @@ async function animatePlayerOnSegment(segment) {
 async function animateLandingAtSegmentEnd(segment) {
   const splash = createRouteEffect("landingSplash", "route-effect-landing");
   if (!splash) {
-    await wait(reducedMotionQuery.matches ? 0 : getAnimationDuration(LANDING_PHASE_MS));
+    await wait(shouldReduceMotion() ? 0 : getAnimationDuration(LANDING_PHASE_MS));
     return;
   }
   positionRouteEffect(splash, segment, 1, { followTangent: false });
@@ -1215,7 +1231,7 @@ async function animateLandingAtSegmentEnd(segment) {
   splash.remove();
 }
 
-async function animateStepToNextCell(attackType) {
+async function animateStepToNextCell() {
   const segment = boardRouteModel?.segments[gameState.position];
   if (!segment) {
     return false;
@@ -1223,7 +1239,7 @@ async function animateStepToNextCell(attackType) {
 
   // Reduced motion keeps discrete, readable steps without moving effects.
   // Skipping every phase here used to finish the entire turn before a repaint.
-  if (reducedMotionQuery.matches) {
+  if (shouldReduceMotion()) {
     await wait(getAnimationDuration(REDUCED_MOTION_STEP_MS));
     const previousPosition = gameState.position;
     gameState.position += 1;
@@ -1232,17 +1248,10 @@ async function animateStepToNextCell(attackType) {
     return true;
   }
 
-  setAnimationPhase("windup");
-  positionPlayerTokenOnSegment(segment, 0);
-  await wait(reducedMotionQuery.matches ? 0 : getAnimationDuration(WINDUP_PHASE_MS));
-
-  setAnimationPhase("attack");
-  await animateAttackOnSegment(segment, attackType);
-
   setAnimationPhase("paint");
   gameState.paintedUntilPosition = gameState.position + 1;
   renderBoardRoute();
-  await wait(reducedMotionQuery.matches ? 0 : getAnimationDuration(50));
+  await wait(shouldReduceMotion() ? 0 : getAnimationDuration(50));
 
   setAnimationPhase("move");
   await animatePlayerOnSegment(segment);
@@ -1252,13 +1261,10 @@ async function animateStepToNextCell(attackType) {
   updatePositionView(previousPosition, {
     animateToken: false,
     smoothFollow: false,
-    keepTokenPosition: true
+    keepTokenPosition: true,
+    skipFollow: true
   });
 
-  setAnimationPhase("landing");
-  await animateLandingAtSegmentEnd(segment);
-  setAnimationPhase("idle");
-  positionPlayerToken(true);
   return true;
 }
 
@@ -1491,7 +1497,7 @@ function positionPlayerToken(animate = false) {
     return;
   }
 
-  const shouldAnimate = animate && !reducedMotionQuery.matches;
+  const shouldAnimate = animate && !shouldReduceMotion();
   token.classList.toggle("is-instant", !shouldAnimate);
 
   const tokenWidth = token.offsetWidth || 22;
@@ -1523,7 +1529,7 @@ function updatePositionView(prevPosition, options = { animateToken: false, smoot
   }
   updateReturnCurrentButton();
 
-  if (shouldFollowCurrent()) {
+  if (shouldFollowCurrent() && !options.skipFollow) {
     scrollToCurrent(options.smoothFollow);
   }
 }
@@ -1670,7 +1676,7 @@ async function undoLastMove() {
   const isCompactViewport = window.matchMedia("(max-width: 640px)").matches;
   const cols = getDisplayCols();
   const smoothFollow = isRowMode() || cols === 1 || (!isWideTwoPane && !isCompactViewport);
-  const stepDelay = reducedMotionQuery.matches ? 30 : UNDO_STEP_MS;
+  const stepDelay = shouldReduceMotion() ? 30 : UNDO_STEP_MS;
 
   while (gameState.position > target) {
     const prevPosition = gameState.position;
@@ -1746,22 +1752,33 @@ async function move(step, options = {}) {
   pushHistory(options.historyDiceText ?? diceResult.textContent);
   gameState.isAnimating = true;
   setControlsDisabled(true);
-  const isWideTwoPane = isWideTwoPaneLayout();
-  const isCompactViewport = window.matchMedia("(max-width: 640px)").matches;
-  const cols = getDisplayCols();
-  const smoothFollow = isRowMode() || cols === 1 || (!isWideTwoPane && !isCompactViewport);
-  const moveAttackType = getAttackTypeForCell(gameState.cells[gameState.position]);
+  if (shouldFollowCurrent()) scrollToCurrent(false);
+  const firstSegment = boardRouteModel?.segments[gameState.position];
+  if (firstSegment && !shouldReduceMotion()) {
+    setAnimationPhase("windup");
+    positionPlayerTokenOnSegment(firstSegment, 0);
+    await wait(getAnimationDuration(WINDUP_PHASE_MS));
+    setAnimationPhase("attack");
+    await animateAttackOnSegment(firstSegment, getAttackTypeForCell(gameState.cells[gameState.position]));
+  }
   while (gameState.position < target) {
-    const moved = await animateStepToNextCell(moveAttackType);
+    const moved = await animateStepToNextCell();
     if (!moved) {
       break;
     }
     if (shouldFollowCurrent()) {
-      scrollToCurrent(smoothFollow);
+      scrollToCurrent(false);
     }
+    if (!shouldReduceMotion()) await wait(getAnimationDuration(120));
   }
 
+  const lastSegment = boardRouteModel?.segments[gameState.position - 1];
+  if (lastSegment && !shouldReduceMotion()) {
+    setAnimationPhase("landing");
+    await animateLandingAtSegmentEnd(lastSegment);
+  }
   setAnimationPhase("idle");
+  positionPlayerToken(false);
   gameState.isAnimating = false;
   setControlsDisabled(false);
 
@@ -1997,6 +2014,12 @@ animationSpeeds.forEach((radio) => {
   });
 });
 
+showAnimationsInput.addEventListener("change", () => {
+  viewState.showAnimations = showAnimationsInput.checked;
+  syncAnimationPreference();
+  savePrefs();
+});
+
 debugInfoInput.addEventListener("change", () => {
   viewState.debugInfo = debugInfoInput.checked;
   updateStatus();
@@ -2088,3 +2111,5 @@ updateUndoButton();
 buildCells();
 renderBoard({ smoothFollow: false });
 void loadImageMaps();
+
+syncAnimationPreference();

@@ -431,7 +431,8 @@ button.primary {
   stroke: #303844;
   stroke-width: max(1px, calc(var(--route-cell-size) * 0.018));
   stroke-linejoin: round;
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.45));
+  filter: drop-shadow(1px 0 0 #111827) drop-shadow(-1px 0 0 #111827)
+    drop-shadow(0 1px 0 #111827) drop-shadow(0 -1px 0 #111827);
 }
 
 .route-turn-arrow {
@@ -784,6 +785,19 @@ button.primary {
   height: clamp(34px, calc(var(--route-cell-size) * 0.66), 76px);
   z-index: 9;
   pointer-events: none;
+  transform: translate3d(var(--effect-x, 0), var(--effect-y, 0), 0)
+    rotate(var(--effect-angle, 0deg)) scale(var(--effect-scale, 1));
+  transform-origin: center;
+  filter: drop-shadow(1px 0 0 #111827) drop-shadow(-1px 0 0 #111827)
+    drop-shadow(0 1px 0 #111827) drop-shadow(0 -1px 0 #111827);
+
+  will-change: transform, opacity;
+}
+
+.route-effect::before {
+  content: "";
+  position: absolute;
+  inset: 0;
   background: var(--squid-color);
   -webkit-mask-image: var(--effect-mask);
   mask-image: var(--effect-mask);
@@ -791,12 +805,7 @@ button.primary {
   mask-repeat: no-repeat;
   -webkit-mask-size: 300% 100%;
   mask-size: 300% 100%;
-  transform: translate3d(var(--effect-x, 0), var(--effect-y, 0), 0)
-    rotate(var(--effect-angle, 0deg)) scale(var(--effect-scale, 1));
-  transform-origin: center;
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.45));
-  animation: route-effect-frames 0.32s steps(2, end) infinite;
-  will-change: transform, opacity;
+  animation: route-effect-frames 0.6s steps(2, end) infinite;
 }
 
 .route-effect-tail {
@@ -805,14 +814,14 @@ button.primary {
 }
 
 .route-effect-attack {
-  width: clamp(44px, calc(var(--route-cell-size) * 0.9), 104px);
-  height: clamp(44px, calc(var(--route-cell-size) * 0.9), 104px);
+  width: clamp(64px, calc(var(--route-cell-size) * 1.1), 128px);
+  height: clamp(64px, calc(var(--route-cell-size) * 1.1), 128px);
   filter:
-    drop-shadow(1px 0 0 #111827)
-    drop-shadow(-1px 0 0 #111827)
-    drop-shadow(0 1px 0 #111827)
-    drop-shadow(0 -1px 0 #111827)
-    drop-shadow(0 2px 2px rgba(0, 0, 0, 0.45));
+    drop-shadow(2px 0 0 #111827)
+    drop-shadow(-2px 0 0 #111827)
+    drop-shadow(0 2px 0 #111827)
+    drop-shadow(0 -2px 0 #111827)
+    drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5));
 }
 
 .route-effect-ricochet {
@@ -823,8 +832,8 @@ button.primary {
 
 .route-effect-landing {
   z-index: 11;
-  width: clamp(44px, calc(var(--route-cell-size) * 0.9), 104px);
-  height: clamp(44px, calc(var(--route-cell-size) * 0.9), 104px);
+  width: clamp(64px, calc(var(--route-cell-size) * 1.1), 128px);
+  height: clamp(64px, calc(var(--route-cell-size) * 1.1), 128px);
 }
 
 @keyframes route-effect-frames {
@@ -844,13 +853,13 @@ button.primary {
 
 
 @media (prefers-reduced-motion: reduce) {
-  .player-token {
+  body:not(.show-animations) .player-token {
     transition: none;
   }
 
-  .player-token-layer,
-  .player-token-body,
-  .route-effect {
+  body:not(.show-animations) .player-token-layer,
+  body:not(.show-animations) .player-token-body,
+  body:not(.show-animations) .route-effect::before {
     animation: none;
   }
 }
